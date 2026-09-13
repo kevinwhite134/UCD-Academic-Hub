@@ -7,7 +7,7 @@
     <groupId>ie.ucd</groupId>
     <artifactId>ucd-gpa-calculator</artifactId>
     <version>1.0.0</version>
-    <name>UCD GPA Calculator</name>
+    <name>UCD Academic Hub</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -21,6 +21,12 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.14.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

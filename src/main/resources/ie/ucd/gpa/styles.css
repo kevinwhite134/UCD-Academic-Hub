@@ -1,24 +1,153 @@
+.hub-root,
 .root-pane {
-    -fx-background-color: #f3f6f8;
+    -fx-background-color: #f4f7f9;
     -fx-font-family: "Segoe UI", "Arial", sans-serif;
-}
-
-.hero-title {
-    -fx-font-size: 40px;
-    -fx-font-weight: 800;
+    -fx-font-size: 13px;
     -fx-text-fill: #153242;
 }
 
-.page-title {
-    -fx-font-size: 24px;
+.sidebar {
+    -fx-background-color: #153242;
+    -fx-padding: 24 18;
+}
+
+.sidebar-title {
+    -fx-font-size: 23px;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
+}
+
+.sidebar-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #b9d8dc;
+}
+
+.storage-note {
+    -fx-font-size: 11px;
+    -fx-text-fill: #b9d8dc;
+    -fx-padding: 12;
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-background-radius: 8;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e8f2f3;
     -fx-font-weight: 800;
+    -fx-alignment: center-left;
+    -fx-padding: 11 12;
+    -fx-background-radius: 7;
+    -fx-cursor: hand;
+}
+
+.nav-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+}
+
+.nav-button-active {
+    -fx-background-color: #ffd166;
+    -fx-text-fill: #153242;
+}
+
+.page-scroll,
+.page-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.page-content {
+    -fx-padding: 28;
+}
+
+.page-title {
+    -fx-font-size: 30px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #153242;
+}
+
+.page-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #5d6e78;
+}
+
+.hero-title {
+    -fx-font-size: 34px;
+    -fx-font-weight: 900;
     -fx-text-fill: #153242;
 }
 
 .section-title {
-    -fx-font-size: 20px;
-    -fx-font-weight: 800;
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
     -fx-text-fill: #153242;
+}
+
+.section-block {
+    -fx-spacing: 12;
+}
+
+.two-column-row {
+    -fx-alignment: top-left;
+}
+
+.metric-strip {
+    -fx-alignment: stretch;
+}
+
+.metric-card,
+.module-card,
+.task-card,
+.panel,
+.empty-state {
+    -fx-background-color: white;
+    -fx-border-color: #dce5ea;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.metric-card {
+    -fx-padding: 16;
+}
+
+.metric-label,
+.eyebrow,
+.small-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #637681;
+}
+
+.metric-value {
+    -fx-font-size: 28px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #153242;
+}
+
+.module-card {
+    -fx-padding: 14;
+}
+
+.panel {
+    -fx-padding: 18;
+}
+
+.empty-state {
+    -fx-padding: 22;
+}
+
+.empty-title,
+.card-title,
+.row-title,
+.reference-title {
+    -fx-font-weight: 900;
+    -fx-text-fill: #153242;
+}
+
+.empty-title {
+    -fx-font-size: 18px;
+}
+
+.card-title {
+    -fx-font-size: 18px;
 }
 
 .muted {
@@ -26,17 +155,193 @@
     -fx-text-fill: #5d6e78;
 }
 
-.top-bar {
+.task-description {
+    -fx-text-fill: #354853;
+}
+
+.colour-rule {
+    -fx-min-width: 6px;
+    -fx-pref-width: 6px;
+    -fx-max-width: 6px;
+    -fx-min-height: 30px;
+    -fx-background-radius: 6;
+}
+
+.colour-bar {
+    -fx-min-height: 6px;
+    -fx-pref-height: 6px;
+    -fx-max-height: 6px;
+    -fx-background-radius: 6;
+}
+
+.status-pill,
+.date-pill,
+.gpa-pill,
+.classification-pill {
+    -fx-background-radius: 999;
+    -fx-padding: 7 11;
+    -fx-font-weight: 900;
+}
+
+.status-passed {
+    -fx-background-color: #d8f3dc;
+    -fx-text-fill: #1b6b34;
+}
+
+.status-track {
+    -fx-background-color: #e4f3ff;
+    -fx-text-fill: #1d5f8f;
+}
+
+.status-risk {
+    -fx-background-color: #fff0c2;
+    -fx-text-fill: #805b00;
+}
+
+.status-critical {
+    -fx-background-color: #ffe3e0;
+    -fx-text-fill: #9c2f24;
+}
+
+.date-pill {
+    -fx-background-color: #edf2f5;
+    -fx-text-fill: #354853;
+}
+
+.ok-text {
+    -fx-text-fill: #1b6b34;
+    -fx-font-weight: 800;
+}
+
+.warning-text {
+    -fx-text-fill: #9c5b00;
+    -fx-font-weight: 800;
+}
+
+.next-deadline,
+.target-result {
+    -fx-text-fill: #354853;
+    -fx-background-color: #f4f7f9;
+    -fx-background-radius: 7;
+    -fx-padding: 9;
+}
+
+.list-row {
+    -fx-background-color: #f8fafb;
+    -fx-background-radius: 8;
+    -fx-padding: 10;
+}
+
+.subsection {
+    -fx-background-color: #f8fafb;
+    -fx-background-radius: 8;
+    -fx-padding: 12;
+}
+
+.field-label,
+.table-header {
+    -fx-font-weight: 900;
+    -fx-text-fill: #153242;
+}
+
+.number-field,
+.combo-box,
+.date-picker,
+.text-area {
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+    -fx-border-color: #bac8cf;
     -fx-background-color: white;
-    -fx-border-color: transparent transparent #d8e0e5 transparent;
+}
+
+.number-field,
+.compact-number-field {
+    -fx-padding: 8;
+}
+
+.compact-number-field {
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+    -fx-border-color: #bac8cf;
+    -fx-background-color: white;
+}
+
+.primary-button,
+.secondary-button,
+.small-button,
+.target-button {
+    -fx-background-radius: 7;
+    -fx-font-weight: 900;
+    -fx-cursor: hand;
+}
+
+.primary-button {
+    -fx-background-color: #136f63;
+    -fx-text-fill: white;
+    -fx-padding: 10 16;
+}
+
+.primary-button:hover {
+    -fx-background-color: #0f5b52;
+}
+
+.secondary-button {
+    -fx-background-color: #e7edf0;
+    -fx-text-fill: #153242;
+    -fx-padding: 9 14;
+}
+
+.small-button,
+.target-button {
+    -fx-background-color: #edf2f5;
+    -fx-text-fill: #153242;
+    -fx-padding: 7 10;
+}
+
+.small-button:hover,
+.target-button:hover,
+.secondary-button:hover {
+    -fx-background-color: #dbe5ea;
+}
+
+.danger-button {
+    -fx-background-color: #ffe3e0;
+    -fx-text-fill: #9c2f24;
+}
+
+.stat-value {
+    -fx-font-size: 20px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #153242;
+}
+
+.progress-bar {
+    -fx-pref-height: 10;
+}
+
+.progress-bar > .track {
+    -fx-background-color: #e3ebef;
+    -fx-background-radius: 999;
+}
+
+.progress-bar > .bar {
+    -fx-background-radius: 999;
+}
+
+.calculator-toolbar {
+    -fx-background-color: white;
+    -fx-border-color: #dce5ea;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 12;
 }
 
 .circle-button {
     -fx-background-radius: 999;
     -fx-background-color: #136f63;
     -fx-text-fill: white;
-    -fx-font-size: 28px;
-    -fx-font-weight: 800;
+    -fx-font-size: 24px;
+    -fx-font-weight: 900;
     -fx-cursor: hand;
 }
 
@@ -44,10 +349,10 @@
     -fx-background-color: #0f5b52;
 }
 
-.subject-card,
-.panel {
+.subject-card {
+    -fx-padding: 16;
     -fx-background-color: white;
-    -fx-border-color: #d8e0e5;
+    -fx-border-color: #dce5ea;
     -fx-border-radius: 8;
     -fx-background-radius: 8;
 }
@@ -59,20 +364,13 @@
 .subject-word {
     -fx-text-fill: #d7e9ea;
     -fx-font-size: 11px;
-    -fx-font-weight: 700;
+    -fx-font-weight: 800;
 }
 
 .subject-number {
     -fx-text-fill: white;
     -fx-font-size: 30px;
     -fx-font-weight: 900;
-}
-
-.field-label,
-.table-header,
-.reference-title {
-    -fx-font-weight: 800;
-    -fx-text-fill: #153242;
 }
 
 .segmented {
@@ -87,7 +385,7 @@
     -fx-background-color: transparent;
     -fx-background-radius: 6;
     -fx-text-fill: #153242;
-    -fx-font-weight: 700;
+    -fx-font-weight: 800;
     -fx-cursor: hand;
 }
 
@@ -107,44 +405,17 @@
     -fx-min-width: 56px;
 }
 
-.number-field,
-.combo-box {
-    -fx-background-radius: 6;
-    -fx-border-radius: 6;
-    -fx-border-color: #b9c7ce;
-    -fx-background-color: white;
-    -fx-padding: 8;
-}
-
-.primary-button {
-    -fx-background-color: #136f63;
-    -fx-text-fill: white;
-    -fx-font-weight: 800;
-    -fx-background-radius: 6;
-    -fx-padding: 10 16;
-    -fx-cursor: hand;
-}
-
-.secondary-button {
-    -fx-background-color: #e7edf0;
-    -fx-text-fill: #153242;
-    -fx-font-weight: 800;
-    -fx-background-radius: 6;
-    -fx-padding: 9 14;
-    -fx-cursor: hand;
-}
-
 .gpa-pill {
     -fx-background-color: #ffd166;
     -fx-text-fill: #153242;
-    -fx-font-size: 18px;
-    -fx-font-weight: 900;
-    -fx-background-radius: 999;
-    -fx-padding: 8 16;
+    -fx-font-size: 17px;
 }
 
-.panel {
-    -fx-padding: 18;
+.classification-pill {
+    -fx-background-color: #e7edf0;
+    -fx-text-fill: #153242;
+    -fx-font-size: 14px;
+    -fx-background-radius: 8;
 }
 
 .results-grid {
@@ -153,8 +424,8 @@
 
 .reference-scale {
     -fx-padding: 12;
-    -fx-background-color: #f7fafb;
-    -fx-border-color: #d8e0e5;
-    -fx-border-radius: 6;
-    -fx-background-radius: 6;
+    -fx-background-color: #f8fafb;
+    -fx-border-color: #dce5ea;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
 }

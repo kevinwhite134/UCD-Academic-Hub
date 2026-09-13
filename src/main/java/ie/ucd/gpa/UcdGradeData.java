@@ -33,6 +33,13 @@ final class UcdGradeData {
             Map.entry("ABS", 0.0)
     );
 
+    static final List<HonoursBand> HONOURS_BANDS = List.of(
+            new HonoursBand("First Class Honours (1:1)", 3.68, 4.20),
+            new HonoursBand("Second Class Honours, Grade 1 (2:1)", 3.08, 3.67),
+            new HonoursBand("Second Class Honours, Grade 2 (2:2)", 2.48, 3.07),
+            new HonoursBand("Pass", 2.00, 2.47)
+    );
+
     static final List<GradeScale> SCALES = List.of(
             new GradeScale(
                     "standard40",
@@ -132,6 +139,14 @@ final class UcdGradeData {
 
     static double gradePoint(String grade) {
         return GRADE_POINTS.getOrDefault(grade, 0.0);
+    }
+
+    static String honoursClassification(double gpa) {
+        return HONOURS_BANDS.stream()
+                .filter(band -> band.contains(gpa))
+                .map(HonoursBand::name)
+                .findFirst()
+                .orElse("No honours classification");
     }
 
     private static GradeBand band(String grade, double lowerInclusive, double upperExclusive) {

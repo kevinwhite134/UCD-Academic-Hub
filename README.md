@@ -1,6 +1,6 @@
-# UCD GPA Calculator
+# UCD Academic Hub
 
-JavaFX GPA calculator for UCD grades.
+JavaFX desktop dashboard for tracking UCD modules, assessments, deadlines, tasks and GPA.
 
 ## Run
 
@@ -10,28 +10,34 @@ mvn javafx:run
 
 You can also open the folder in IntelliJ and run `ie.ucd.gpa.UcdGpaCalculatorApp`.
 
-## Run From A Folder
-
-The `dist` folder contains a copy you can run outside IntelliJ:
-
-```text
-dist\Run UCD GPA Calculator.bat
-```
-
-Keep the `.bat` file, the app `.jar`, and the `lib` folder together.
-
 ## What it does
 
-- Starts with 10 large circles so you can choose 1 to 10 subjects.
-- Shows one subject card per subject.
-- Percentage mode lets each subject use one of three UCD conversion scales:
-  - Standard Conversion Grade Scale 40% Pass
-  - Alternative Linear Conversion Grade Scale 40% Pass
-  - Alternative Non-Linear Conversion Grade Scale 50% Pass
-- Letter-grade mode skips percentages and lets you choose a letter plus `+`, plain, or `-`.
-- Displays the calculated grade, grade point, overall GPA, all conversion scales, and the UCD grade-point table.
+- Opens on a dashboard with current GPA, modules passed, assessment progress and the next deadline.
+- Lets you create, edit, delete and reorder modules.
+- Stores module code, description, colour, pass grade, credits, semester and academic year.
+- Lets you add weighted assessments with due dates, completion status, grades, notes and links.
+- Calculates completion percentage, secured grade, pass status and target-grade requirements.
+- Warns when assessment weights do not add up cleanly to 100%.
+- Provides academic task cards with module links, priority, due date, completion status and custom URL buttons.
+- Includes a calendar view that shows assessments and tasks due on a selected date.
+- Keeps the original UCD GPA calculator as a dedicated hub option.
+- Autosaves local data between sessions.
 
-## Sources
+## Local Data
+
+The app stores Academic Hub data in:
+
+```text
+%USERPROFILE%\.ucd-academic-hub\academic-hub.properties
+```
+
+No account, server or cloud connection is required.
+
+## Current Notes
+
+The PID proposes Python, PySide6 and SQLite. This implementation keeps the existing JavaFX project and evolves it into the dashboard first, so the current calculator remains usable while the hub grows. SQLite can be added later if you want the persistence layer to match the PID exactly.
+
+## Original GPA Sources
 
 - UCD Registry Grades: https://www.ucd.ie/registry/staff/registryservices/assessment/gradingsupport/grades/
 - Standard Conversion Grade Scale 40% Pass: https://www.ucd.ie/registry/t4media/Standard_Conversion_Grade_Scale_40_Pass.pdf
