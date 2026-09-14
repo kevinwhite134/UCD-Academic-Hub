@@ -399,8 +399,8 @@ public final class UcdGpaCalculatorApp extends Application {
             return new VBox(12, title, emptyState("No modules yet", "Create your first module to start tracking grades, progress and deadlines.", addModule));
         }
 
-        FlowPane moduleCards = new FlowPane(12, 12);
-        moduleCards.setPrefWrapLength(1040);
+        FlowPane moduleCards = new FlowPane(14, 14);
+        moduleCards.setPrefWrapLength(1400);
         for (AcademicModule module : state.orderedModules()) {
             moduleCards.getChildren().add(buildModuleCard(module, true));
         }
@@ -429,9 +429,9 @@ public final class UcdGpaCalculatorApp extends Application {
         header.setAlignment(Pos.TOP_LEFT);
 
         HBox rings = new HBox(8,
-                percentageRing(progress.completedWeight(), module.colour(), "Complete", 54),
-                percentageRing(progress.securedGrade(), module.colour(), "Secured", 54),
-                percentageRing(module.passGrade(), module.colour(), "Pass", 54)
+                percentageRing(progress.completedWeight(), module.colour(), "Complete", 58),
+                percentageRing(progress.securedGrade(), module.colour(), "Secured", 58),
+                percentageRing(module.passGrade(), module.colour(), "Pass", 58)
         );
         rings.getStyleClass().add("ring-row");
 
@@ -452,8 +452,8 @@ public final class UcdGpaCalculatorApp extends Application {
                 new HBox(8, weightStatus, spacer(), credits)
         );
         card.getStyleClass().add("module-card");
-        card.setPrefWidth(340);
-        card.setMinWidth(312);
+        card.setPrefWidth(450);
+        card.setMinWidth(420);
         card.setStyle(moduleCardStyle(module.colour()));
 
         if (showActions) {
@@ -506,7 +506,7 @@ public final class UcdGpaCalculatorApp extends Application {
                 result.getChildren().add(targetMessage("This target is mathematically impossible from the remaining weight."));
             } else {
                 HBox row = new HBox(8,
-                        percentageRing(required, "#007aff", "Need", 46),
+                        percentageRing(required, "#007aff", "Need", 50),
                         targetMessage("average across remaining assessments.")
                 );
                 row.setAlignment(Pos.CENTER_LEFT);
