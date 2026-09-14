@@ -21,8 +21,11 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -42,17 +45,17 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Arc;
-import javafx.scene.shape.ArcType;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
@@ -255,35 +258,30 @@ public final class UcdGpaCalculatorApp extends Application {
 
     private VBox percentageRing(double value, String colour, String labelText, double size) {
         double clamped = Math.max(0.0, Math.min(100.0, value));
-        double radius = size / 2.0 - 7.0;
-        double strokeWidth = Math.max(4.0, size * 0.07);
+        double strokeWidth = Math.max(4.0, size * 0.075);
+        double inset = strokeWidth / 2.0 + 2.0;
+        double diameter = size - inset * 2.0;
 
-        double center = size / 2.0;
+        Canvas graphic = new Canvas(size, size);
+        GraphicsContext context = graphic.getGraphicsContext2D();
+        context.setLineWidth(strokeWidth);
+        context.setLineCap(StrokeLineCap.ROUND);
+        context.setStroke(Color.rgb(21, 50, 66, 0.10));
+        context.strokeOval(inset, inset, diameter, diameter);
 
-        Circle track = new Circle(center, center, radius);
-        track.setFill(Color.TRANSPARENT);
-        track.setStroke(Color.rgb(21, 50, 66, 0.10));
-        track.setStrokeWidth(strokeWidth);
+        if (clamped >= 99.95) {
+            context.setStroke(Color.web(colour));
+            context.strokeOval(inset, inset, diameter, diameter);
+        } else if (clamped > 0.0) {
+            context.setStroke(Color.web(colour));
+            context.strokeArc(inset, inset, diameter, diameter, 90.0, -clamped / 100.0 * 360.0, javafx.scene.shape.ArcType.OPEN);
+        }
 
-        Arc arc = new Arc(center, center, radius, radius, 90.0, -clamped / 100.0 * 360.0);
-        arc.setType(ArcType.OPEN);
-        arc.setFill(Color.TRANSPARENT);
-        arc.setStroke(Color.web(colour));
-        arc.setStrokeWidth(strokeWidth);
-        arc.setStrokeLineCap(StrokeLineCap.ROUND);
-        arc.setVisible(clamped > 0.0);
-
-        Label valueLabel = new Label(percent(clamped));
-        valueLabel.getStyleClass().add("ring-value");
-        valueLabel.setStyle("-fx-font-size: " + Math.max(14.0, size * 0.18) + "px;");
-        valueLabel.setAlignment(Pos.CENTER);
-        valueLabel.setMinSize(size, size);
-        valueLabel.setPrefSize(size, size);
-
-        Pane graphic = new Pane(track, arc, valueLabel);
-        graphic.setMinSize(size, size);
-        graphic.setPrefSize(size, size);
-        graphic.setMaxSize(size, size);
+        context.setTextAlign(TextAlignment.CENTER);
+        context.setTextBaseline(VPos.CENTER);
+        context.setFill(Color.web("#162b39"));
+        context.setFont(Font.font("Segoe UI", FontWeight.BOLD, Math.max(13.0, size * 0.20)));
+        context.fillText(percent(clamped), size / 2.0, size / 2.0);
 
         VBox wrapper;
         if (labelText == null || labelText.isBlank()) {
