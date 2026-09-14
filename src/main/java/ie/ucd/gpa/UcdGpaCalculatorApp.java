@@ -317,31 +317,75 @@ public final class UcdGpaCalculatorApp extends Application {
         return box;
     }
 
-    private HBox dashboardAssessmentRow(AssessmentEntry assessment) {
+    private VBox dashboardAssessmentRow(AssessmentEntry assessment) {
         CheckBox completed = new CheckBox();
         completed.setSelected(assessment.completed());
-        completed.setOnAction(event -> {
-            assessment.setCompleted(completed.isSelected());
-            persistAndRefresh(HubPage.DASHBOARD);
-        });
 
         Label name = new Label(assessment.name());
         name.getStyleClass().add("assessment-title");
         name.setWrapText(true);
 
-        String gradeText = assessment.grade() == null ? "grade not entered" : "grade " + percent(assessment.grade());
-        Label detail = new Label(percent(assessment.weight()) + " weight | " + gradeText + " | due " + formatDate(assessment.dueDate()));
+        Label detail = new Label(percent(assessment.weight()) + " weight | due " + formatDate(assessment.dueDate()));
         detail.getStyleClass().add("muted");
         detail.setWrapText(true);
+
+        Label gradeLabel = new Label("Grade");
+        gradeLabel.getStyleClass().add("small-label");
+        TextField grade = new TextField(assessment.grade() == null ? "" : PERCENT_FORMAT.format(assessment.grade()));
+        grade.setPromptText("0-100");
+        grade.getStyleClass().add("dashboard-grade-field");
+        grade.setPrefWidth(58);
+        Label suffix = new Label("%");
+        suffix.getStyleClass().add("small-label");
+
+        HBox gradeRow = new HBox(6, gradeLabel, grade, suffix);
+        gradeRow.setAlignment(Pos.CENTER_LEFT);
+        gradeRow.getStyleClass().add("dashboard-grade-row");
+        gradeRow.setVisible(assessment.completed());
+        gradeRow.setManaged(assessment.completed());
+
+        completed.setOnAction(event -> {
+            assessment.setCompleted(completed.isSelected());
+            if (completed.isSelected()) {
+                persistOnly();
+                gradeRow.setVisible(true);
+                gradeRow.setManaged(true);
+                grade.requestFocus();
+            } else {
+                persistAndRefresh(HubPage.DASHBOARD);
+            }
+        });
+
+        grade.setOnAction(event -> saveDashboardAssessmentGrade(assessment, grade));
+        grade.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue) {
+                saveDashboardAssessmentGrade(assessment, grade);
+            }
+        });
 
         Button open = smallButton("Open");
         open.setDisable(assessment.url() == null || assessment.url().isBlank());
         open.setOnAction(event -> openUrl(assessment.url()));
 
-        HBox row = new HBox(8, completed, new VBox(2, name, detail), spacer(), open);
-        row.setAlignment(Pos.CENTER_LEFT);
+        HBox topRow = new HBox(8, completed, new VBox(2, name, detail), spacer(), open);
+        topRow.setAlignment(Pos.CENTER_LEFT);
+
+        VBox row = new VBox(4, topRow, gradeRow);
         row.getStyleClass().add("dashboard-assessment-row");
         return row;
+    }
+
+    private void saveDashboardAssessmentGrade(AssessmentEntry assessment, TextField gradeField) {
+        Double grade = parseOptionalPercent(gradeField, "Assessment grade");
+        if (grade == InvalidNumber.VALUE) {
+            gradeField.setText(assessment.grade() == null ? "" : PERCENT_FORMAT.format(assessment.grade()));
+            return;
+        }
+        assessment.setGrade(grade);
+        if (grade != null && !assessment.completed()) {
+            assessment.setCompleted(true);
+        }
+        persistAndRefresh(HubPage.DASHBOARD);
     }
 
     private VBox buildDashboardModulesSection() {
@@ -385,9 +429,9 @@ public final class UcdGpaCalculatorApp extends Application {
         header.setAlignment(Pos.TOP_LEFT);
 
         HBox rings = new HBox(8,
-                percentageRing(progress.completedWeight(), module.colour(), "Complete", 48),
-                percentageRing(progress.securedGrade(), module.colour(), "Secured", 48),
-                percentageRing(module.passGrade(), module.colour(), "Pass", 48)
+                percentageRing(progress.completedWeight(), module.colour(), "Complete", 54),
+                percentageRing(progress.securedGrade(), module.colour(), "Secured", 54),
+                percentageRing(module.passGrade(), module.colour(), "Pass", 54)
         );
         rings.getStyleClass().add("ring-row");
 
@@ -408,8 +452,8 @@ public final class UcdGpaCalculatorApp extends Application {
                 new HBox(8, weightStatus, spacer(), credits)
         );
         card.getStyleClass().add("module-card");
-        card.setPrefWidth(310);
-        card.setMinWidth(286);
+        card.setPrefWidth(340);
+        card.setMinWidth(312);
         card.setStyle(moduleCardStyle(module.colour()));
 
         if (showActions) {
@@ -462,7 +506,7 @@ public final class UcdGpaCalculatorApp extends Application {
                 result.getChildren().add(targetMessage("This target is mathematically impossible from the remaining weight."));
             } else {
                 HBox row = new HBox(8,
-                        percentageRing(required, "#007aff", "Need", 42),
+                        percentageRing(required, "#007aff", "Need", 46),
                         targetMessage("average across remaining assessments.")
                 );
                 row.setAlignment(Pos.CENTER_LEFT);
@@ -1709,6 +1753,16 @@ public final class UcdGpaCalculatorApp extends Application {
         try {
             dataStore.save(state);
             showPage(page);
+        } catch (IOException ex) {
+            showAlert(Alert.AlertType.ERROR, "Could not save data", ex.getMessage());
+        }
+    }
+
+    private void persistOnly() {
+        state.renumberModules();
+        state.renumberTasks();
+        try {
+            dataStore.save(state);
         } catch (IOException ex) {
             showAlert(Alert.AlertType.ERROR, "Could not save data", ex.getMessage());
         }

@@ -135,7 +135,7 @@
 }
 
 .module-card {
-    -fx-padding: 9;
+    -fx-padding: 11;
 }
 
 .panel {
@@ -159,7 +159,7 @@
 }
 
 .card-title {
-    -fx-font-size: 15px;
+    -fx-font-size: 16px;
 }
 
 .muted {
@@ -201,7 +201,7 @@
 }
 
 .ring-label {
-    -fx-font-size: 7px;
+    -fx-font-size: 8px;
     -fx-font-weight: 900;
     -fx-text-fill: #667985;
 }
@@ -279,19 +279,32 @@
 .dashboard-assessments {
     -fx-background-color: rgba(255, 255, 255, 0.55);
     -fx-background-radius: 9;
-    -fx-padding: 6;
+    -fx-padding: 7;
 }
 
 .dashboard-assessment-row {
     -fx-background-color: rgba(255, 255, 255, 0.60);
     -fx-background-radius: 8;
-    -fx-padding: 4 6;
+    -fx-padding: 5 7;
 }
 
 .assessment-title {
     -fx-font-weight: 900;
     -fx-text-fill: #183140;
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
+}
+
+.dashboard-grade-row {
+    -fx-padding: 2 0 0 28;
+}
+
+.dashboard-grade-field {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #c8d1d8;
+    -fx-background-color: rgba(255, 255, 255, 0.88);
+    -fx-padding: 5 7;
+    -fx-font-weight: 800;
 }
 
 .list-row {
