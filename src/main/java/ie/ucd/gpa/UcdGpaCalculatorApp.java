@@ -42,6 +42,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -134,8 +135,8 @@ public final class UcdGpaCalculatorApp extends Application {
 
     private VBox buildSidebar() {
         ImageView logo = new ImageView(new Image(getClass().getResourceAsStream("/ie/ucd/gpa/ucd-logo.png")));
-        logo.setFitWidth(54);
-        logo.setFitHeight(70);
+        logo.setFitWidth(46);
+        logo.setFitHeight(58);
         logo.setPreserveRatio(true);
         logo.setSmooth(true);
 
@@ -166,7 +167,7 @@ public final class UcdGpaCalculatorApp extends Application {
 
         VBox sidebar = new VBox(22, brand, nav, spacer, storage);
         sidebar.getStyleClass().add("sidebar");
-        sidebar.setPrefWidth(238);
+        sidebar.setPrefWidth(214);
         return sidebar;
     }
 
@@ -245,7 +246,7 @@ public final class UcdGpaCalculatorApp extends Application {
         detail.getStyleClass().add("muted");
         detail.setWrapText(true);
 
-        VBox card = new VBox(8, label, percentageRing(percentage.orElse(0.0), "#007aff", "Complete", 82), detail);
+        VBox card = new VBox(8, label, percentageRing(percentage.orElse(0.0), "#007aff", "Complete", 72), detail);
         card.getStyleClass().add("metric-card");
         card.setMinWidth(190);
         HBox.setHgrow(card, Priority.ALWAYS);
@@ -257,23 +258,29 @@ public final class UcdGpaCalculatorApp extends Application {
         double radius = size / 2.0 - 7.0;
         double strokeWidth = Math.max(4.0, size * 0.07);
 
-        Circle track = new Circle(radius);
+        double center = size / 2.0;
+
+        Circle track = new Circle(center, center, radius);
         track.setFill(Color.TRANSPARENT);
         track.setStroke(Color.rgb(21, 50, 66, 0.10));
         track.setStrokeWidth(strokeWidth);
 
-        Arc arc = new Arc(0, 0, radius, radius, 90.0, -clamped / 100.0 * 360.0);
+        Arc arc = new Arc(center, center, radius, radius, 90.0, -clamped / 100.0 * 360.0);
         arc.setType(ArcType.OPEN);
         arc.setFill(Color.TRANSPARENT);
         arc.setStroke(Color.web(colour));
         arc.setStrokeWidth(strokeWidth);
         arc.setStrokeLineCap(StrokeLineCap.ROUND);
+        arc.setVisible(clamped > 0.0);
 
         Label valueLabel = new Label(percent(clamped));
         valueLabel.getStyleClass().add("ring-value");
         valueLabel.setStyle("-fx-font-size: " + Math.max(14.0, size * 0.18) + "px;");
+        valueLabel.setAlignment(Pos.CENTER);
+        valueLabel.setMinSize(size, size);
+        valueLabel.setPrefSize(size, size);
 
-        StackPane graphic = new StackPane(track, arc, valueLabel);
+        Pane graphic = new Pane(track, arc, valueLabel);
         graphic.setMinSize(size, size);
         graphic.setPrefSize(size, size);
         graphic.setMaxSize(size, size);
@@ -350,7 +357,7 @@ public final class UcdGpaCalculatorApp extends Application {
             return new VBox(12, title, emptyState("No modules yet", "Create your first module to start tracking grades, progress and deadlines.", addModule));
         }
 
-        FlowPane moduleCards = new FlowPane(20, 20);
+        FlowPane moduleCards = new FlowPane(16, 16);
         moduleCards.setPrefWrapLength(1040);
         for (AcademicModule module : state.orderedModules()) {
             moduleCards.getChildren().add(buildModuleCard(module, true));
@@ -380,9 +387,9 @@ public final class UcdGpaCalculatorApp extends Application {
         header.setAlignment(Pos.TOP_LEFT);
 
         HBox rings = new HBox(14,
-                percentageRing(progress.completedWeight(), module.colour(), "Complete", 76),
-                percentageRing(progress.securedGrade(), module.colour(), "Secured", 76),
-                percentageRing(module.passGrade(), module.colour(), "Pass", 76)
+                percentageRing(progress.completedWeight(), module.colour(), "Complete", 68),
+                percentageRing(progress.securedGrade(), module.colour(), "Secured", 68),
+                percentageRing(module.passGrade(), module.colour(), "Pass", 68)
         );
         rings.getStyleClass().add("ring-row");
 
@@ -403,8 +410,8 @@ public final class UcdGpaCalculatorApp extends Application {
                 new HBox(10, weightStatus, spacer(), credits)
         );
         card.getStyleClass().add("module-card");
-        card.setPrefWidth(480);
-        card.setMinWidth(420);
+        card.setPrefWidth(430);
+        card.setMinWidth(380);
         card.setStyle(moduleCardStyle(module.colour()));
 
         if (showActions) {
@@ -457,7 +464,7 @@ public final class UcdGpaCalculatorApp extends Application {
                 result.getChildren().add(targetMessage("This target is mathematically impossible from the remaining weight."));
             } else {
                 HBox row = new HBox(12,
-                        percentageRing(required, "#007aff", "Need", 64),
+                        percentageRing(required, "#007aff", "Need", 56),
                         targetMessage("average across remaining assessments.")
                 );
                 row.setAlignment(Pos.CENTER_LEFT);

@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Academic Hub App" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="ie.ucd.gpa.UcdGpaCalculatorApp" />
+    <module name="UCD-GPA-Calculator" />
+    <option name="VM_PARAMETERS" value="--module-path &quot;$PROJECT_DIR$/dist/lib&quot; --add-modules javafx.controls" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
