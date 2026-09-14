@@ -134,7 +134,7 @@
 }
 
 .module-card {
-    -fx-padding: 18;
+    -fx-padding: 16;
 }
 
 .panel {
@@ -158,7 +158,7 @@
 }
 
 .card-title {
-    -fx-font-size: 18px;
+    -fx-font-size: 19px;
 }
 
 .muted {
@@ -187,10 +187,11 @@
 
 .ring-row {
     -fx-alignment: center-left;
+    -fx-padding: 2 0 4 0;
 }
 
 .percentage-ring {
-    -fx-padding: 2;
+    -fx-padding: 1;
 }
 
 .ring-value {
@@ -200,7 +201,7 @@
 
 .ring-label {
     -fx-font-size: 10px;
-    -fx-font-weight: 800;
+    -fx-font-weight: 900;
     -fx-text-fill: #667985;
 }
 
@@ -209,7 +210,7 @@
     -fx-border-color: rgba(60, 60, 67, 0.10);
     -fx-border-radius: 999;
     -fx-background-radius: 999;
-    -fx-padding: 8 12;
+    -fx-padding: 6 10;
     -fx-font-weight: 900;
     -fx-text-fill: #233846;
 }
@@ -219,7 +220,7 @@
 .gpa-pill,
 .classification-pill {
     -fx-background-radius: 999;
-    -fx-padding: 7 11;
+    -fx-padding: 6 10;
     -fx-font-weight: 900;
 }
 
@@ -262,8 +263,8 @@
 .target-result {
     -fx-text-fill: #354853;
     -fx-background-color: rgba(255, 255, 255, 0.62);
-    -fx-background-radius: 12;
-    -fx-padding: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 8;
 }
 
 .target-message {
@@ -273,14 +274,14 @@
 
 .dashboard-assessments {
     -fx-background-color: rgba(255, 255, 255, 0.55);
-    -fx-background-radius: 12;
-    -fx-padding: 12;
+    -fx-background-radius: 10;
+    -fx-padding: 10;
 }
 
 .dashboard-assessment-row {
     -fx-background-color: rgba(255, 255, 255, 0.60);
-    -fx-background-radius: 10;
-    -fx-padding: 9 10;
+    -fx-background-radius: 9;
+    -fx-padding: 7 8;
 }
 
 .assessment-title {

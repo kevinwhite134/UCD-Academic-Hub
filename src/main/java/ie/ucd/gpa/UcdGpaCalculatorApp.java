@@ -245,7 +245,7 @@ public final class UcdGpaCalculatorApp extends Application {
         detail.getStyleClass().add("muted");
         detail.setWrapText(true);
 
-        VBox card = new VBox(8, label, percentageRing(percentage.orElse(0.0), "#007aff", "", 72), detail);
+        VBox card = new VBox(8, label, percentageRing(percentage.orElse(0.0), "#007aff", "Complete", 82), detail);
         card.getStyleClass().add("metric-card");
         card.setMinWidth(190);
         HBox.setHgrow(card, Priority.ALWAYS);
@@ -254,8 +254,8 @@ public final class UcdGpaCalculatorApp extends Application {
 
     private VBox percentageRing(double value, String colour, String labelText, double size) {
         double clamped = Math.max(0.0, Math.min(100.0, value));
-        double radius = size / 2.0 - 6.0;
-        double strokeWidth = Math.max(5.0, size * 0.085);
+        double radius = size / 2.0 - 7.0;
+        double strokeWidth = Math.max(4.0, size * 0.07);
 
         Circle track = new Circle(radius);
         track.setFill(Color.TRANSPARENT);
@@ -271,24 +271,21 @@ public final class UcdGpaCalculatorApp extends Application {
 
         Label valueLabel = new Label(percent(clamped));
         valueLabel.getStyleClass().add("ring-value");
-        valueLabel.setStyle("-fx-font-size: " + Math.max(13.0, size * 0.17) + "px;");
+        valueLabel.setStyle("-fx-font-size: " + Math.max(14.0, size * 0.18) + "px;");
 
-        VBox center;
-        if (labelText == null || labelText.isBlank()) {
-            center = new VBox(valueLabel);
-        } else {
-            Label label = new Label(labelText);
-            label.getStyleClass().add("ring-label");
-            center = new VBox(1, valueLabel, label);
-        }
-        center.setAlignment(Pos.CENTER);
-
-        StackPane graphic = new StackPane(track, arc, center);
+        StackPane graphic = new StackPane(track, arc, valueLabel);
         graphic.setMinSize(size, size);
         graphic.setPrefSize(size, size);
         graphic.setMaxSize(size, size);
 
-        VBox wrapper = new VBox(graphic);
+        VBox wrapper;
+        if (labelText == null || labelText.isBlank()) {
+            wrapper = new VBox(graphic);
+        } else {
+            Label label = new Label(labelText);
+            label.getStyleClass().add("ring-label");
+            wrapper = new VBox(5, graphic, label);
+        }
         wrapper.getStyleClass().add("percentage-ring");
         wrapper.setAlignment(Pos.CENTER);
         return wrapper;
@@ -353,7 +350,8 @@ public final class UcdGpaCalculatorApp extends Application {
             return new VBox(12, title, emptyState("No modules yet", "Create your first module to start tracking grades, progress and deadlines.", addModule));
         }
 
-        VBox moduleCards = new VBox(16);
+        FlowPane moduleCards = new FlowPane(20, 20);
+        moduleCards.setPrefWrapLength(1040);
         for (AcademicModule module : state.orderedModules()) {
             moduleCards.getChildren().add(buildModuleCard(module, true));
         }
@@ -375,18 +373,18 @@ public final class UcdGpaCalculatorApp extends Application {
         Label status = new Label(progress.passStatus());
         status.getStyleClass().addAll("status-pill", statusClass(progress.passStatus()));
 
+        Label credits = new Label(PERCENT_FORMAT.format(module.credits()) + " credits");
+        credits.getStyleClass().add("credits-pill");
+
         HBox header = new HBox(10, new VBox(3, code, name), spacer(), status);
         header.setAlignment(Pos.TOP_LEFT);
 
         HBox rings = new HBox(14,
-                percentageRing(progress.completedWeight(), module.colour(), "Complete", 92),
-                percentageRing(progress.securedGrade(), module.colour(), "Secured", 92),
-                percentageRing(module.passGrade(), module.colour(), "Pass", 92)
+                percentageRing(progress.completedWeight(), module.colour(), "Complete", 76),
+                percentageRing(progress.securedGrade(), module.colour(), "Secured", 76),
+                percentageRing(module.passGrade(), module.colour(), "Pass", 76)
         );
         rings.getStyleClass().add("ring-row");
-
-        Label credits = new Label(PERCENT_FORMAT.format(module.credits()) + " credits");
-        credits.getStyleClass().add("credits-pill");
 
         Label nextAssessment = new Label(nextAssessmentText(module));
         nextAssessment.getStyleClass().add("next-deadline");
@@ -398,14 +396,15 @@ public final class UcdGpaCalculatorApp extends Application {
         VBox card = new VBox(12,
                 moduleColourBar(module.colour()),
                 header,
-                new HBox(12, rings, spacer(), credits),
+                rings,
                 buildTargetCalculator(progress),
                 buildDashboardAssessmentChecklist(module),
                 nextAssessment,
-                weightStatus
+                new HBox(10, weightStatus, spacer(), credits)
         );
         card.getStyleClass().add("module-card");
-        card.setMaxWidth(Double.MAX_VALUE);
+        card.setPrefWidth(480);
+        card.setMinWidth(420);
         card.setStyle(moduleCardStyle(module.colour()));
 
         if (showActions) {
@@ -457,8 +456,8 @@ public final class UcdGpaCalculatorApp extends Application {
             } else if (Double.isInfinite(required) || required > 100.0) {
                 result.getChildren().add(targetMessage("This target is mathematically impossible from the remaining weight."));
             } else {
-                HBox row = new HBox(10,
-                        percentageRing(required, "#007aff", "Need", 68),
+                HBox row = new HBox(12,
+                        percentageRing(required, "#007aff", "Need", 64),
                         targetMessage("average across remaining assessments.")
                 );
                 row.setAlignment(Pos.CENTER_LEFT);
