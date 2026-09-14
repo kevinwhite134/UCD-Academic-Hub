@@ -1,52 +1,62 @@
 .hub-root,
 .root-pane {
-    -fx-background-color: #f4f7f9;
+    -fx-background-color: #f5f5f7;
     -fx-font-family: "Segoe UI", "Arial", sans-serif;
     -fx-font-size: 13px;
     -fx-text-fill: #153242;
 }
 
 .sidebar {
-    -fx-background-color: #153242;
-    -fx-padding: 24 18;
+    -fx-background-color: rgba(255, 255, 255, 0.86);
+    -fx-border-color: transparent #e2e6ea transparent transparent;
+    -fx-padding: 22 16;
 }
 
 .sidebar-title {
-    -fx-font-size: 23px;
+    -fx-font-size: 20px;
     -fx-font-weight: 900;
-    -fx-text-fill: white;
+    -fx-text-fill: #172b3a;
 }
 
 .sidebar-subtitle {
     -fx-font-size: 12px;
-    -fx-text-fill: #b9d8dc;
+    -fx-text-fill: #6b7b86;
+}
+
+.logo-plate {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-padding: 7;
+    -fx-effect: dropshadow(gaussian, rgba(24, 39, 75, 0.12), 18, 0.20, 0, 7);
 }
 
 .storage-note {
     -fx-font-size: 11px;
-    -fx-text-fill: #b9d8dc;
+    -fx-text-fill: #6b7b86;
     -fx-padding: 12;
-    -fx-background-color: rgba(255, 255, 255, 0.08);
-    -fx-background-radius: 8;
+    -fx-background-color: rgba(255, 255, 255, 0.68);
+    -fx-border-color: #e6eaee;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
 }
 
 .nav-button {
     -fx-background-color: transparent;
-    -fx-text-fill: #e8f2f3;
+    -fx-text-fill: #314756;
     -fx-font-weight: 800;
     -fx-alignment: center-left;
     -fx-padding: 11 12;
-    -fx-background-radius: 7;
+    -fx-background-radius: 10;
     -fx-cursor: hand;
 }
 
 .nav-button:hover {
-    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-background-color: rgba(0, 122, 255, 0.08);
 }
 
 .nav-button-active {
-    -fx-background-color: #ffd166;
-    -fx-text-fill: #153242;
+    -fx-background-color: rgba(0, 122, 255, 0.13);
+    -fx-text-fill: #0057b8;
 }
 
 .page-scroll,
@@ -55,11 +65,11 @@
 }
 
 .page-content {
-    -fx-padding: 28;
+    -fx-padding: 30;
 }
 
 .page-title {
-    -fx-font-size: 30px;
+    -fx-font-size: 32px;
     -fx-font-weight: 900;
     -fx-text-fill: #153242;
 }
@@ -99,9 +109,10 @@
 .panel,
 .empty-state {
     -fx-background-color: white;
-    -fx-border-color: #dce5ea;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
+    -fx-border-color: rgba(60, 60, 67, 0.12);
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(24, 39, 75, 0.08), 18, 0.18, 0, 6);
 }
 
 .metric-card {
@@ -123,11 +134,11 @@
 }
 
 .module-card {
-    -fx-padding: 14;
+    -fx-padding: 18;
 }
 
 .panel {
-    -fx-padding: 18;
+    -fx-padding: 20;
 }
 
 .empty-state {
@@ -152,7 +163,7 @@
 
 .muted {
     -fx-font-size: 13px;
-    -fx-text-fill: #5d6e78;
+    -fx-text-fill: #687986;
 }
 
 .task-description {
@@ -171,7 +182,36 @@
     -fx-min-height: 6px;
     -fx-pref-height: 6px;
     -fx-max-height: 6px;
-    -fx-background-radius: 6;
+    -fx-background-radius: 999;
+}
+
+.ring-row {
+    -fx-alignment: center-left;
+}
+
+.percentage-ring {
+    -fx-padding: 2;
+}
+
+.ring-value {
+    -fx-font-weight: 900;
+    -fx-text-fill: #162b39;
+}
+
+.ring-label {
+    -fx-font-size: 10px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #667985;
+}
+
+.credits-pill {
+    -fx-background-color: rgba(255, 255, 255, 0.64);
+    -fx-border-color: rgba(60, 60, 67, 0.10);
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+    -fx-padding: 8 12;
+    -fx-font-weight: 900;
+    -fx-text-fill: #233846;
 }
 
 .status-pill,
@@ -221,20 +261,42 @@
 .next-deadline,
 .target-result {
     -fx-text-fill: #354853;
-    -fx-background-color: #f4f7f9;
-    -fx-background-radius: 7;
-    -fx-padding: 9;
+    -fx-background-color: rgba(255, 255, 255, 0.62);
+    -fx-background-radius: 12;
+    -fx-padding: 10;
+}
+
+.target-message {
+    -fx-text-fill: #354853;
+    -fx-font-weight: 700;
+}
+
+.dashboard-assessments {
+    -fx-background-color: rgba(255, 255, 255, 0.55);
+    -fx-background-radius: 12;
+    -fx-padding: 12;
+}
+
+.dashboard-assessment-row {
+    -fx-background-color: rgba(255, 255, 255, 0.60);
+    -fx-background-radius: 10;
+    -fx-padding: 9 10;
+}
+
+.assessment-title {
+    -fx-font-weight: 900;
+    -fx-text-fill: #183140;
 }
 
 .list-row {
-    -fx-background-color: #f8fafb;
-    -fx-background-radius: 8;
+    -fx-background-color: rgba(248, 250, 251, 0.92);
+    -fx-background-radius: 12;
     -fx-padding: 10;
 }
 
 .subsection {
-    -fx-background-color: #f8fafb;
-    -fx-background-radius: 8;
+    -fx-background-color: rgba(248, 250, 251, 0.92);
+    -fx-background-radius: 12;
     -fx-padding: 12;
 }
 
@@ -248,9 +310,9 @@
 .combo-box,
 .date-picker,
 .text-area {
-    -fx-background-radius: 7;
-    -fx-border-radius: 7;
-    -fx-border-color: #bac8cf;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: #c8d1d8;
     -fx-background-color: white;
 }
 
@@ -260,9 +322,9 @@
 }
 
 .compact-number-field {
-    -fx-background-radius: 7;
-    -fx-border-radius: 7;
-    -fx-border-color: #bac8cf;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: #c8d1d8;
     -fx-background-color: white;
 }
 
@@ -270,30 +332,30 @@
 .secondary-button,
 .small-button,
 .target-button {
-    -fx-background-radius: 7;
+    -fx-background-radius: 10;
     -fx-font-weight: 900;
     -fx-cursor: hand;
 }
 
 .primary-button {
-    -fx-background-color: #136f63;
+    -fx-background-color: #007aff;
     -fx-text-fill: white;
     -fx-padding: 10 16;
 }
 
 .primary-button:hover {
-    -fx-background-color: #0f5b52;
+    -fx-background-color: #0066d6;
 }
 
 .secondary-button {
-    -fx-background-color: #e7edf0;
+    -fx-background-color: rgba(255, 255, 255, 0.70);
     -fx-text-fill: #153242;
     -fx-padding: 9 14;
 }
 
 .small-button,
 .target-button {
-    -fx-background-color: #edf2f5;
+    -fx-background-color: rgba(255, 255, 255, 0.74);
     -fx-text-fill: #153242;
     -fx-padding: 7 10;
 }
@@ -301,7 +363,7 @@
 .small-button:hover,
 .target-button:hover,
 .secondary-button:hover {
-    -fx-background-color: #dbe5ea;
+    -fx-background-color: white;
 }
 
 .danger-button {

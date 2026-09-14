@@ -1,6 +1,9 @@
 package ie.ucd.gpa;
 
 import java.io.IOException;
+import java.awt.Desktop;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -27,13 +30,14 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
@@ -43,8 +47,11 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Arc;
+import javafx.scene.shape.ArcType;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeLineCap;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
@@ -126,11 +133,24 @@ public final class UcdGpaCalculatorApp extends Application {
     }
 
     private VBox buildSidebar() {
+        ImageView logo = new ImageView(new Image(getClass().getResourceAsStream("/ie/ucd/gpa/ucd-logo.png")));
+        logo.setFitWidth(54);
+        logo.setFitHeight(70);
+        logo.setPreserveRatio(true);
+        logo.setSmooth(true);
+
+        StackPane logoPlate = new StackPane(logo);
+        logoPlate.getStyleClass().add("logo-plate");
+
         Label title = new Label("UCD Academic Hub");
         title.getStyleClass().add("sidebar-title");
 
         Label subtitle = new Label("Local academic dashboard");
         subtitle.getStyleClass().add("sidebar-subtitle");
+
+        VBox brandText = new VBox(4, title, subtitle);
+        HBox brand = new HBox(12, logoPlate, brandText);
+        brand.setAlignment(Pos.CENTER_LEFT);
 
         VBox nav = new VBox(8);
         for (HubPage page : HubPage.values()) {
@@ -144,7 +164,7 @@ public final class UcdGpaCalculatorApp extends Application {
         storage.getStyleClass().add("storage-note");
         storage.setWrapText(true);
 
-        VBox sidebar = new VBox(20, new VBox(4, title, subtitle), nav, spacer, storage);
+        VBox sidebar = new VBox(22, brand, nav, spacer, storage);
         sidebar.getStyleClass().add("sidebar");
         sidebar.setPrefWidth(238);
         return sidebar;
@@ -179,18 +199,27 @@ public final class UcdGpaCalculatorApp extends Application {
         long modulesPassed = state.modules().stream()
                 .filter(module -> AcademicCalculations.progressFor(module, state.assessmentsFor(module.id())).securedGrade() >= module.passGrade())
                 .count();
-        long completedAssessments = state.assessments().stream().filter(AssessmentEntry::completed).count();
         List<DeadlineItem> deadlines = AcademicCalculations.upcomingDeadlines(state, 1);
         String nextDeadline = deadlines.isEmpty() ? "None" : relativeDate(deadlines.getFirst().dueDate());
 
         HBox strip = new HBox(14,
                 metricCard("Current GPA", gpa.isPresent() ? GPA_FORMAT.format(gpa.getAsDouble()) : "-", "Completed modules with credits"),
+                metricRingCard("Course Completion", overallCourseCompletion(), "Average module completion"),
                 metricCard("Modules Passed", modulesPassed + " / " + state.modules().size(), "Secured pass marks"),
-                metricCard("Assessments", completedAssessments + " / " + state.assessments().size(), "Completed assessment items"),
                 metricCard("Next Deadline", nextDeadline, deadlines.isEmpty() ? "No upcoming dates" : deadlines.getFirst().title())
         );
         strip.getStyleClass().add("metric-strip");
         return strip;
+    }
+
+    private OptionalDouble overallCourseCompletion() {
+        if (state.modules().isEmpty()) {
+            return OptionalDouble.empty();
+        }
+        double total = state.modules().stream()
+                .mapToDouble(module -> AcademicCalculations.progressFor(module, state.assessmentsFor(module.id())).completedWeight())
+                .sum();
+        return OptionalDouble.of(total / state.modules().size());
     }
 
     private VBox metricCard(String labelText, String valueText, String detailText) {
@@ -209,6 +238,110 @@ public final class UcdGpaCalculatorApp extends Application {
         return card;
     }
 
+    private VBox metricRingCard(String labelText, OptionalDouble percentage, String detailText) {
+        Label label = new Label(labelText);
+        label.getStyleClass().add("metric-label");
+        Label detail = new Label(detailText);
+        detail.getStyleClass().add("muted");
+        detail.setWrapText(true);
+
+        VBox card = new VBox(8, label, percentageRing(percentage.orElse(0.0), "#007aff", "", 72), detail);
+        card.getStyleClass().add("metric-card");
+        card.setMinWidth(190);
+        HBox.setHgrow(card, Priority.ALWAYS);
+        return card;
+    }
+
+    private VBox percentageRing(double value, String colour, String labelText, double size) {
+        double clamped = Math.max(0.0, Math.min(100.0, value));
+        double radius = size / 2.0 - 6.0;
+        double strokeWidth = Math.max(5.0, size * 0.085);
+
+        Circle track = new Circle(radius);
+        track.setFill(Color.TRANSPARENT);
+        track.setStroke(Color.rgb(21, 50, 66, 0.10));
+        track.setStrokeWidth(strokeWidth);
+
+        Arc arc = new Arc(0, 0, radius, radius, 90.0, -clamped / 100.0 * 360.0);
+        arc.setType(ArcType.OPEN);
+        arc.setFill(Color.TRANSPARENT);
+        arc.setStroke(Color.web(colour));
+        arc.setStrokeWidth(strokeWidth);
+        arc.setStrokeLineCap(StrokeLineCap.ROUND);
+
+        Label valueLabel = new Label(percent(clamped));
+        valueLabel.getStyleClass().add("ring-value");
+        valueLabel.setStyle("-fx-font-size: " + Math.max(13.0, size * 0.17) + "px;");
+
+        VBox center;
+        if (labelText == null || labelText.isBlank()) {
+            center = new VBox(valueLabel);
+        } else {
+            Label label = new Label(labelText);
+            label.getStyleClass().add("ring-label");
+            center = new VBox(1, valueLabel, label);
+        }
+        center.setAlignment(Pos.CENTER);
+
+        StackPane graphic = new StackPane(track, arc, center);
+        graphic.setMinSize(size, size);
+        graphic.setPrefSize(size, size);
+        graphic.setMaxSize(size, size);
+
+        VBox wrapper = new VBox(graphic);
+        wrapper.getStyleClass().add("percentage-ring");
+        wrapper.setAlignment(Pos.CENTER);
+        return wrapper;
+    }
+
+    private VBox buildDashboardAssessmentChecklist(AcademicModule module) {
+        Label title = new Label("Assignments");
+        title.getStyleClass().add("small-label");
+
+        VBox rows = new VBox(7);
+        List<AssessmentEntry> assessments = state.assessmentsFor(module.id());
+        if (assessments.isEmpty()) {
+            Label empty = new Label("No assignments added yet.");
+            empty.getStyleClass().add("muted");
+            rows.getChildren().add(empty);
+        } else {
+            for (AssessmentEntry assessment : assessments) {
+                rows.getChildren().add(dashboardAssessmentRow(assessment));
+            }
+        }
+
+        VBox box = new VBox(8, title, rows);
+        box.getStyleClass().add("dashboard-assessments");
+        return box;
+    }
+
+    private HBox dashboardAssessmentRow(AssessmentEntry assessment) {
+        CheckBox completed = new CheckBox();
+        completed.setSelected(assessment.completed());
+        completed.setOnAction(event -> {
+            assessment.setCompleted(completed.isSelected());
+            persistAndRefresh(HubPage.DASHBOARD);
+        });
+
+        Label name = new Label(assessment.name());
+        name.getStyleClass().add("assessment-title");
+        name.setWrapText(true);
+
+        String gradeText = assessment.grade() == null ? "grade not entered" : "grade " + percent(assessment.grade());
+        Label detail = new Label(percent(assessment.weight()) + " weight | " + gradeText + " | due " + formatDate(assessment.dueDate()));
+        detail.getStyleClass().add("muted");
+        detail.setWrapText(true);
+
+        Button open = smallButton("Open");
+        open.setDisable(assessment.url() == null || assessment.url().isBlank());
+        open.setOnAction(event -> openUrl(assessment.url()));
+
+        HBox row = new HBox(10, completed, new VBox(3, name, detail), spacer(), open);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.getStyleClass().add("dashboard-assessment-row");
+        return row;
+    }
+
     private VBox buildDashboardModulesSection() {
         Label title = new Label("Current Modules");
         title.getStyleClass().add("section-title");
@@ -220,8 +353,7 @@ public final class UcdGpaCalculatorApp extends Application {
             return new VBox(12, title, emptyState("No modules yet", "Create your first module to start tracking grades, progress and deadlines.", addModule));
         }
 
-        FlowPane moduleCards = new FlowPane(16, 16);
-        moduleCards.setPrefWrapLength(940);
+        VBox moduleCards = new VBox(16);
         for (AcademicModule module : state.orderedModules()) {
             moduleCards.getChildren().add(buildModuleCard(module, true));
         }
@@ -246,21 +378,15 @@ public final class UcdGpaCalculatorApp extends Application {
         HBox header = new HBox(10, new VBox(3, code, name), spacer(), status);
         header.setAlignment(Pos.TOP_LEFT);
 
-        ProgressBar completionBar = progressBar(progress.completedWeight(), module.colour());
-        ProgressBar securedBar = progressBar(progress.securedGrade(), module.colour());
+        HBox rings = new HBox(14,
+                percentageRing(progress.completedWeight(), module.colour(), "Complete", 92),
+                percentageRing(progress.securedGrade(), module.colour(), "Secured", 92),
+                percentageRing(module.passGrade(), module.colour(), "Pass", 92)
+        );
+        rings.getStyleClass().add("ring-row");
 
-        GridPane stats = new GridPane();
-        stats.setHgap(12);
-        stats.setVgap(8);
-        stats.add(statBlock("Completed", percent(progress.completedWeight())), 0, 0);
-        stats.add(statBlock("Secured Grade", percent(progress.securedGrade())), 1, 0);
-        stats.add(statBlock("Pass Grade", percent(module.passGrade())), 0, 1);
-        stats.add(statBlock("Credits", PERCENT_FORMAT.format(module.credits())), 1, 1);
-
-        Label completionLabel = new Label("Completion progress");
-        completionLabel.getStyleClass().add("small-label");
-        Label securedLabel = new Label("Final grade secured");
-        securedLabel.getStyleClass().add("small-label");
+        Label credits = new Label(PERCENT_FORMAT.format(module.credits()) + " credits");
+        credits.getStyleClass().add("credits-pill");
 
         Label nextAssessment = new Label(nextAssessmentText(module));
         nextAssessment.getStyleClass().add("next-deadline");
@@ -272,15 +398,15 @@ public final class UcdGpaCalculatorApp extends Application {
         VBox card = new VBox(12,
                 moduleColourBar(module.colour()),
                 header,
-                stats,
-                new VBox(5, completionLabel, completionBar),
-                new VBox(5, securedLabel, securedBar),
+                new HBox(12, rings, spacer(), credits),
                 buildTargetCalculator(progress),
+                buildDashboardAssessmentChecklist(module),
                 nextAssessment,
                 weightStatus
         );
         card.getStyleClass().add("module-card");
-        card.setPrefWidth(330);
+        card.setMaxWidth(Double.MAX_VALUE);
+        card.setStyle(moduleCardStyle(module.colour()));
 
         if (showActions) {
             Button open = new Button("Open Module");
@@ -302,45 +428,52 @@ public final class UcdGpaCalculatorApp extends Application {
         TextField targetField = new TextField("60");
         targetField.getStyleClass().add("compact-number-field");
         targetField.setPrefWidth(70);
-        Label result = new Label();
+        Label suffix = new Label("%");
+        suffix.getStyleClass().add("small-label");
+
+        VBox result = new VBox();
         result.getStyleClass().add("target-result");
-        result.setWrapText(true);
 
         Runnable update = () -> updateTargetResult(progress, targetField, result);
         targetField.textProperty().addListener((observable, oldValue, newValue) -> update.run());
 
-        HBox targetButtons = new HBox(6);
-        for (String target : List.of("40", "50", "60", "70")) {
-            Button button = new Button(target + "%");
-            button.getStyleClass().add("target-button");
-            button.setOnAction(event -> targetField.setText(target));
-            targetButtons.getChildren().add(button);
-        }
-
-        HBox inputRow = new HBox(8, targetField, targetButtons);
+        HBox inputRow = new HBox(8, targetField, suffix);
         inputRow.setAlignment(Pos.CENTER_LEFT);
         update.run();
         return new VBox(7, title, inputRow, result);
     }
 
-    private void updateTargetResult(ModuleProgress progress, TextField targetField, Label result) {
+    private void updateTargetResult(ModuleProgress progress, TextField targetField, VBox result) {
+        result.getChildren().clear();
         try {
             double target = Double.parseDouble(targetField.getText().trim());
             if (target < 0.0 || target > 100.0) {
-                result.setText("Choose 0 to 100%.");
+                result.getChildren().add(targetMessage("Choose 0 to 100%."));
                 return;
             }
             double required = AcademicCalculations.requiredAverage(progress.securedGrade(), progress.remainingWeight(), target);
             if (required == 0.0) {
-                result.setText("Target already secured.");
+                result.getChildren().add(targetMessage("Target already secured."));
             } else if (Double.isInfinite(required) || required > 100.0) {
-                result.setText("This target is mathematically impossible from the remaining weight.");
+                result.getChildren().add(targetMessage("This target is mathematically impossible from the remaining weight."));
             } else {
-                result.setText("Need " + percent(required) + " average across remaining assessments.");
+                HBox row = new HBox(10,
+                        percentageRing(required, "#007aff", "Need", 68),
+                        targetMessage("average across remaining assessments.")
+                );
+                row.setAlignment(Pos.CENTER_LEFT);
+                result.getChildren().add(row);
             }
         } catch (NumberFormatException ex) {
-            result.setText("Enter a target percentage.");
+            result.getChildren().add(targetMessage("Enter a target percentage."));
         }
+    }
+
+    private Label targetMessage(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("target-message");
+        label.setWrapText(true);
+        return label;
     }
 
     private VBox buildUpcomingDeadlinesPanel(int limit) {
@@ -902,7 +1035,12 @@ public final class UcdGpaCalculatorApp extends Application {
         row.getStyleClass().add("task-card");
         HBox.setHgrow(text, Priority.ALWAYS);
 
-        if (showActions) {
+        if (!showActions) {
+            Button open = smallButton(task.buttonText().isBlank() ? "Open" : task.buttonText());
+            open.setDisable(task.url().isBlank());
+            open.setOnAction(event -> openUrl(task.url()));
+            row.getChildren().add(open);
+        } else {
             Button up = smallButton("Up");
             Button down = smallButton("Down");
             List<AcademicTask> tasks = state.orderedTasks();
@@ -1440,21 +1578,6 @@ public final class UcdGpaCalculatorApp extends Application {
         return comboBox;
     }
 
-    private Node statBlock(String labelText, String valueText) {
-        Label value = new Label(valueText);
-        value.getStyleClass().add("stat-value");
-        Label label = new Label(labelText);
-        label.getStyleClass().add("small-label");
-        return new VBox(2, value, label);
-    }
-
-    private ProgressBar progressBar(double value, String colour) {
-        ProgressBar progressBar = new ProgressBar(Math.max(0.0, Math.min(1.0, value / 100.0)));
-        progressBar.setMaxWidth(Double.MAX_VALUE);
-        progressBar.setStyle("-fx-accent: " + colour + ";");
-        return progressBar;
-    }
-
     private Region moduleColourRule(String colour) {
         Region rule = new Region();
         rule.getStyleClass().add("colour-rule");
@@ -1467,6 +1590,30 @@ public final class UcdGpaCalculatorApp extends Application {
         rule.getStyleClass().add("colour-bar");
         rule.setStyle("-fx-background-color: " + colour + ";");
         return rule;
+    }
+
+    private String moduleCardStyle(String colour) {
+        return "-fx-background-color: " + mixWithWhite(colour, 0.88) + ";"
+                + "-fx-border-color: " + mixWithWhite(colour, 0.66) + ";";
+    }
+
+    private String mixWithWhite(String colour, double whiteWeight) {
+        try {
+            Color base = Color.web(colour);
+            Color mixed = base.interpolate(Color.WHITE, whiteWeight);
+            return rgbHex(mixed);
+        } catch (IllegalArgumentException ex) {
+            return "#ffffff";
+        }
+    }
+
+    private String rgbHex(Color color) {
+        return String.format(
+                "#%02x%02x%02x",
+                Math.round(color.getRed() * 255.0),
+                Math.round(color.getGreen() * 255.0),
+                Math.round(color.getBlue() * 255.0)
+        );
     }
 
     private Region spacer() {
@@ -1568,7 +1715,16 @@ public final class UcdGpaCalculatorApp extends Application {
             return;
         }
         String target = url.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*") ? url : "https://" + url;
-        getHostServices().showDocument(target);
+        try {
+            URI uri = new URI(target);
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                Desktop.getDesktop().browse(uri);
+            } else {
+                getHostServices().showDocument(target);
+            }
+        } catch (IOException | URISyntaxException | IllegalArgumentException ex) {
+            showAlert(Alert.AlertType.ERROR, "Could not open link", "Check the URL and try again: " + target);
+        }
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {
