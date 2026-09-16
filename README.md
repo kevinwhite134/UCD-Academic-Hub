@@ -1,45 +1,125 @@
 # UCD Academic Hub
 
-JavaFX desktop dashboard for tracking UCD modules, assessments, deadlines, tasks and GPA.
+A JavaFX desktop application for UCD students to manage modules, assessment deadlines, academic tasks, and GPA calculations in one local dashboard.
 
-## Run
+The project started as a UCD GPA calculator and has grown into a fuller academic planning tool: students can track modules, weighted assessments, progress toward pass marks, upcoming deadlines, and UCD grade-point outcomes without needing an account or cloud service.
+
+## Why I Built This
+
+University grade tracking can become messy quickly: modules have different credit values, assessments carry different weights, and deadlines often live across several systems. I built UCD Academic Hub to turn that information into a focused desktop workflow that answers practical questions:
+
+- What is my current GPA based on completed modules?
+- Which assessments or tasks are due next?
+- How much of each module have I completed?
+- What grade do I need in the remaining work to pass or reach a target?
+- Are my assessment weights valid and complete?
+
+## Features
+
+- **Academic dashboard** with current GPA, module pass count, course completion, and next deadline.
+- **Module management** for module codes, descriptions, colours, credits, semesters, academic years, and pass marks.
+- **Assessment tracking** with weights, due dates, completion status, grades, notes, and useful links.
+- **Progress calculations** for completed weight, secured grade, remaining weight, pass status, and target-grade requirements.
+- **Deadline calendar** showing assessments and academic tasks due on a selected date.
+- **Task board** for module-linked work, priorities, due dates, completion status, and custom URL buttons.
+- **UCD GPA calculator** supporting percentage and letter-grade entry using UCD grade scales.
+- **Local autosave** so data persists between sessions without a server, account, or database setup.
+
+## Technical Highlights
+
+- Built with **Java 21**, **JavaFX 21**, and **Maven**.
+- Uses a modular Java structure through `module-info.java`.
+- Separates calculation logic from UI code so GPA, pass-status, deadline, and progress behaviour can be unit tested.
+- Includes JUnit 5 tests for core academic calculations.
+- Persists user data locally with Java `Properties`, keeping the app simple to run and easy to inspect.
+- Packages a runnable JAR and Windows launch script in `dist/`.
+
+## Tech Stack
+
+| Area | Tools |
+| --- | --- |
+| Language | Java 21 |
+| UI | JavaFX 21 |
+| Build | Maven |
+| Testing | JUnit 5 |
+| Storage | Local properties file |
+
+## Getting Started
+
+### Prerequisites
+
+- Java 21 or newer
+- Maven 3.9 or newer
+
+### Run from Source
 
 ```powershell
 mvn javafx:run
 ```
 
-You can also open the folder in IntelliJ and run `ie.ucd.gpa.UcdGpaCalculatorApp`.
+You can also open the project in IntelliJ IDEA and run:
 
-## What it does
+```text
+ie.ucd.gpa.UcdGpaCalculatorApp
+```
 
-- Opens on a dashboard with current GPA, modules passed, assessment progress and the next deadline.
-- Lets you create, edit, delete and reorder modules.
-- Stores module code, description, colour, pass grade, credits, semester and academic year.
-- Lets you add weighted assessments with due dates, completion status, grades, notes and links.
-- Calculates completion percentage, secured grade, pass status and target-grade requirements.
-- Warns when assessment weights do not add up cleanly to 100%.
-- Provides academic task cards with module links, priority, due date, completion status and custom URL buttons.
-- Includes a calendar view that shows assessments and tasks due on a selected date.
-- Keeps the original UCD GPA calculator as a dedicated hub option.
-- Autosaves local data between sessions.
+### Run the Packaged App
+
+The `dist/` folder includes a packaged JAR and Windows launcher:
+
+```text
+dist/Run UCD GPA Calculator.bat
+```
+
+## Testing
+
+Run the unit test suite with:
+
+```powershell
+mvn test
+```
+
+Current tests cover the calculation layer, including secured grades, required averages, impossible pass scenarios, and credit-weighted GPA.
 
 ## Local Data
 
-The app stores Academic Hub data in:
+Academic Hub saves data locally at:
 
 ```text
 %USERPROFILE%\.ucd-academic-hub\academic-hub.properties
 ```
 
-No account, server or cloud connection is required.
+No user data is sent to a server. The app works fully offline after dependencies are installed.
 
-## Current Notes
+## Project Structure
 
-The PID proposes Python, PySide6 and SQLite. This implementation keeps the existing JavaFX project and evolves it into the dashboard first, so the current calculator remains usable while the hub grows. SQLite can be added later if you want the persistence layer to match the PID exactly.
+```text
+src/main/java/ie/ucd/gpa/
+  AcademicCalculations.java    Core GPA, progress, deadline, and pass-status logic
+  AcademicDataStore.java       Local persistence
+  AcademicHubState.java        In-memory module, assessment, and task state
+  UcdGpaCalculatorApp.java     JavaFX application and screens
 
-## Original GPA Sources
+src/test/java/ie/ucd/gpa/
+  AcademicCalculationsTest.java
 
-- UCD Registry Grades: https://www.ucd.ie/registry/staff/registryservices/assessment/gradingsupport/grades/
-- Standard Conversion Grade Scale 40% Pass: https://www.ucd.ie/registry/t4media/Standard_Conversion_Grade_Scale_40_Pass.pdf
-- Alternative Linear Conversion Grade Scale 40% Pass: https://www.ucd.ie/registry/t4media/Alternative%20Linear%20Conversion%20Grade%20Scale%2040%20per%20cent%20Pass.pdf
-- Alternative Non-Linear Conversion Grade Scale 50% Pass: https://www.ucd.ie/registry/t4media/Alternative%20Non-Linear%20Conversion%20Grade%20Scale%2050%20percent.pdf
+src/main/resources/ie/ucd/gpa/
+  styles.css
+  ucd-logo.png
+```
+
+## UCD Grade Sources
+
+The GPA calculator is based on UCD's published grade and conversion information:
+
+- [UCD Registry Grades](https://www.ucd.ie/registry/staff/registryservices/assessment/gradingsupport/grades/)
+- [Standard Conversion Grade Scale 40% Pass](https://www.ucd.ie/registry/t4media/Standard_Conversion_Grade_Scale_40_Pass.pdf)
+- [Alternative Linear Conversion Grade Scale 40% Pass](https://www.ucd.ie/registry/t4media/Alternative%20Linear%20Conversion%20Grade%20Scale%2040%20per%20cent%20Pass.pdf)
+- [Alternative Non-Linear Conversion Grade Scale 50% Pass](https://www.ucd.ie/registry/t4media/Alternative%20Non-Linear%20Conversion%20Grade%20Scale%2050%20percent.pdf)
+
+## Future Improvements
+
+- Add import/export for academic data.
+- Add richer reporting for semester and year-level performance.
+- Move persistence to SQLite if the app grows beyond local properties storage.
+- Add screenshots or a short demo GIF for the GitHub project page.
