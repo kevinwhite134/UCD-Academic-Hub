@@ -300,7 +300,7 @@ public final class UcdGpaCalculatorApp extends Application {
         Label title = new Label("Assignments");
         title.getStyleClass().add("small-label");
 
-        VBox rows = new VBox(5);
+        VBox rows = new VBox(3);
         List<AssessmentEntry> assessments = state.assessmentsFor(module.id());
         if (assessments.isEmpty()) {
             Label empty = new Label("No assignments added yet.");
@@ -312,7 +312,7 @@ public final class UcdGpaCalculatorApp extends Application {
             }
         }
 
-        VBox box = new VBox(6, title, rows);
+        VBox box = new VBox(4, title, rows);
         box.getStyleClass().add("dashboard-assessments");
         return box;
     }
@@ -367,10 +367,10 @@ public final class UcdGpaCalculatorApp extends Application {
         open.setDisable(assessment.url() == null || assessment.url().isBlank());
         open.setOnAction(event -> openUrl(assessment.url()));
 
-        HBox topRow = new HBox(8, completed, new VBox(2, name, detail), spacer(), open);
+        HBox topRow = new HBox(6, completed, new VBox(1, name, detail), spacer(), open);
         topRow.setAlignment(Pos.CENTER_LEFT);
 
-        VBox row = new VBox(4, topRow, gradeRow);
+        VBox row = new VBox(2, topRow, gradeRow);
         row.getStyleClass().add("dashboard-assessment-row");
         return row;
     }
@@ -441,13 +441,13 @@ public final class UcdGpaCalculatorApp extends Application {
         Label credits = new Label(PERCENT_FORMAT.format(module.credits()) + " credits");
         credits.getStyleClass().add("credits-pill");
 
-        HBox header = new HBox(8, new VBox(2, code, name), spacer(), status);
+        HBox header = new HBox(6, new VBox(1, code, name), spacer(), status);
         header.setAlignment(Pos.TOP_LEFT);
 
-        HBox rings = new HBox(8,
-                percentageRing(progress.completedWeight(), module.colour(), "Complete", 58),
-                percentageRing(progress.securedGrade(), module.colour(), "Secured", 58),
-                percentageRing(module.passGrade(), module.colour(), "Pass", 58)
+        HBox rings = new HBox(6,
+                percentageRing(progress.completedWeight(), module.colour(), "Complete", 48),
+                percentageRing(progress.securedGrade(), module.colour(), "Secured", 48),
+                percentageRing(module.passGrade(), module.colour(), "Pass", 48)
         );
         rings.getStyleClass().add("ring-row");
 
@@ -458,14 +458,14 @@ public final class UcdGpaCalculatorApp extends Application {
         Label weightStatus = new Label("Assessment weights: " + percent(progress.totalWeight()));
         weightStatus.getStyleClass().add(progress.assessmentWeightsComplete() ? "ok-text" : "warning-text");
 
-        VBox card = new VBox(7,
+        VBox card = new VBox(5,
                 moduleColourBar(module.colour()),
                 header,
                 rings,
                 buildTargetCalculator(progress),
                 buildDashboardAssessmentChecklist(module),
                 nextAssessment,
-                new HBox(8, weightStatus, spacer(), credits)
+                new HBox(6, weightStatus, spacer(), credits)
         );
         card.getStyleClass().add("module-card");
         card.setPrefWidth(0);
@@ -475,7 +475,7 @@ public final class UcdGpaCalculatorApp extends Application {
 
         if (showActions) {
             Button open = new Button("Open Module");
-            open.getStyleClass().add("secondary-button");
+            open.getStyleClass().add("small-button");
             open.setOnAction(event -> {
                 editingModule = module;
                 showPage(HubPage.MODULES);
@@ -492,7 +492,7 @@ public final class UcdGpaCalculatorApp extends Application {
 
         TextField targetField = new TextField("60");
         targetField.getStyleClass().add("compact-number-field");
-        targetField.setPrefWidth(70);
+        targetField.setPrefWidth(58);
         Label suffix = new Label("%");
         suffix.getStyleClass().add("small-label");
 
@@ -502,7 +502,7 @@ public final class UcdGpaCalculatorApp extends Application {
         Runnable update = () -> updateTargetResult(progress, targetField, result);
         targetField.textProperty().addListener((observable, oldValue, newValue) -> update.run());
 
-        HBox inputRow = new HBox(8, targetField, suffix);
+        HBox inputRow = new HBox(6, targetField, suffix);
         inputRow.setAlignment(Pos.CENTER_LEFT);
         update.run();
         return new VBox(4, title, inputRow, result);
@@ -522,8 +522,8 @@ public final class UcdGpaCalculatorApp extends Application {
             } else if (Double.isInfinite(required) || required > 100.0) {
                 result.getChildren().add(targetMessage("This target is mathematically impossible from the remaining weight."));
             } else {
-                HBox row = new HBox(8,
-                        percentageRing(required, "#007aff", "Need", 50),
+                HBox row = new HBox(6,
+                        percentageRing(required, "#007aff", "Need", 42),
                         targetMessage("average across remaining assessments.")
                 );
                 row.setAlignment(Pos.CENTER_LEFT);

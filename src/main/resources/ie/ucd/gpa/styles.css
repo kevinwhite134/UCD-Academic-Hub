@@ -135,7 +135,7 @@
 }
 
 .module-card {
-    -fx-padding: 13;
+    -fx-padding: 10;
 }
 
 .panel {
@@ -159,7 +159,7 @@
 }
 
 .card-title {
-    -fx-font-size: 17px;
+    -fx-font-size: 15px;
 }
 
 .muted {
@@ -180,9 +180,9 @@
 }
 
 .colour-bar {
-    -fx-min-height: 5px;
-    -fx-pref-height: 5px;
-    -fx-max-height: 5px;
+    -fx-min-height: 4px;
+    -fx-pref-height: 4px;
+    -fx-max-height: 4px;
     -fx-background-radius: 999;
 }
 
@@ -267,7 +267,7 @@
     -fx-text-fill: #354853;
     -fx-background-color: rgba(255, 255, 255, 0.62);
     -fx-background-radius: 10;
-    -fx-padding: 8;
+    -fx-padding: 6;
 }
 
 .target-message {
@@ -279,19 +279,23 @@
 .dashboard-assessments {
     -fx-background-color: rgba(255, 255, 255, 0.55);
     -fx-background-radius: 10;
-    -fx-padding: 9;
+    -fx-padding: 6;
 }
 
 .dashboard-assessment-row {
     -fx-background-color: rgba(255, 255, 255, 0.60);
     -fx-background-radius: 9;
-    -fx-padding: 7 8;
+    -fx-padding: 4 6;
 }
 
 .assessment-title {
     -fx-font-weight: 900;
     -fx-text-fill: #183140;
-    -fx-font-size: 13px;
+    -fx-font-size: 12px;
+}
+
+.dashboard-assessment-row .muted {
+    -fx-font-size: 11px;
 }
 
 .dashboard-grade-row {
@@ -303,7 +307,7 @@
     -fx-border-radius: 8;
     -fx-border-color: #c8d1d8;
     -fx-background-color: rgba(255, 255, 255, 0.88);
-    -fx-padding: 5 7;
+    -fx-padding: 3 6;
     -fx-font-weight: 800;
 }
 
