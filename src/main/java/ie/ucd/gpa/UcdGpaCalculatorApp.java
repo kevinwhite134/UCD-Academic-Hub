@@ -66,7 +66,7 @@ public final class UcdGpaCalculatorApp extends Application {
     private static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("0.#");
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM yyyy");
     private static final List<String> PRIORITIES = List.of("Critical", "High", "Normal", "Low");
-    private static final double THREE_MODULE_COLUMN_BREAKPOINT = 1180.0;
+    private static final double THREE_MODULE_COLUMN_BREAKPOINT = 1450.0;
     private static final List<ModuleColour> MODULE_COLOURS = List.of(
             new ModuleColour("Blue", "#2f80ed"),
             new ModuleColour("Purple", "#7c3aed"),
@@ -485,6 +485,7 @@ public final class UcdGpaCalculatorApp extends Application {
                 new HBox(8, weightStatus, spacer(), credits)
         );
         card.getStyleClass().add("module-card");
+        card.setPrefWidth(0);
         card.setMaxWidth(Double.MAX_VALUE);
         card.setMinWidth(0);
         card.setStyle(moduleCardStyle(module.colour()));
