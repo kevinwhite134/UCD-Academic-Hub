@@ -42,7 +42,6 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -66,7 +65,6 @@ public final class UcdGpaCalculatorApp extends Application {
     private static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("0.#");
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM yyyy");
     private static final List<String> PRIORITIES = List.of("Critical", "High", "Normal", "Low");
-    private static final double THREE_MODULE_COLUMN_BREAKPOINT = 1450.0;
     private static final List<ModuleColour> MODULE_COLOURS = List.of(
             new ModuleColour("Blue", "#2f80ed"),
             new ModuleColour("Purple", "#7c3aed"),
@@ -401,46 +399,31 @@ public final class UcdGpaCalculatorApp extends Application {
             return new VBox(12, title, emptyState("No modules yet", "Create your first module to start tracking grades, progress and deadlines.", addModule));
         }
 
-        GridPane moduleCards = new GridPane();
-        moduleCards.setHgap(14);
-        moduleCards.setVgap(14);
-        List<VBox> cards = new ArrayList<>();
-        for (AcademicModule module : state.orderedModules()) {
-            cards.add(buildModuleCard(module, true));
-        }
-        int[] currentColumnCount = {0};
-        moduleCards.widthProperty().addListener((observable, oldWidth, newWidth) -> {
-            int columnCount = newWidth.doubleValue() >= THREE_MODULE_COLUMN_BREAKPOINT ? 3 : 2;
-            if (columnCount != currentColumnCount[0]) {
-                layoutModuleCards(moduleCards, cards, columnCount);
-                currentColumnCount[0] = columnCount;
+        VBox moduleCards = new VBox(14);
+        List<AcademicModule> modules = state.orderedModules();
+        for (int index = 0; index < modules.size(); index += 2) {
+            HBox row = new HBox(14);
+            VBox firstCard = buildModuleCard(modules.get(index), true);
+            HBox.setHgrow(firstCard, Priority.ALWAYS);
+            row.getChildren().add(firstCard);
+
+            if (index + 1 < modules.size()) {
+                VBox secondCard = buildModuleCard(modules.get(index + 1), true);
+                HBox.setHgrow(secondCard, Priority.ALWAYS);
+                row.getChildren().add(secondCard);
+            } else {
+                Region emptyColumn = new Region();
+                emptyColumn.setMinWidth(0);
+                emptyColumn.setPrefWidth(0);
+                HBox.setHgrow(emptyColumn, Priority.ALWAYS);
+                row.getChildren().add(emptyColumn);
             }
-        });
-        layoutModuleCards(moduleCards, cards, 2);
-        currentColumnCount[0] = 2;
+            moduleCards.getChildren().add(row);
+        }
 
         VBox section = new VBox(12, title, moduleCards);
         section.getStyleClass().add("section-block");
         return section;
-    }
-
-    private void layoutModuleCards(GridPane grid, List<VBox> cards, int columnCount) {
-        grid.getChildren().clear();
-        grid.getColumnConstraints().clear();
-
-        for (int column = 0; column < columnCount; column++) {
-            ColumnConstraints constraints = new ColumnConstraints();
-            constraints.setPercentWidth(100.0 / columnCount);
-            constraints.setHgrow(Priority.ALWAYS);
-            grid.getColumnConstraints().add(constraints);
-        }
-
-        for (int index = 0; index < cards.size(); index++) {
-            VBox card = cards.get(index);
-            GridPane.setHgrow(card, Priority.ALWAYS);
-            GridPane.setFillWidth(card, true);
-            grid.add(card, index % columnCount, index / columnCount);
-        }
     }
 
     private VBox buildModuleCard(AcademicModule module, boolean showActions) {
