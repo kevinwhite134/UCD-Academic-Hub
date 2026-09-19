@@ -5,9 +5,11 @@ import java.awt.Desktop;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,10 +17,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.OptionalDouble;
 
+import javafx.animation.ScaleTransition;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
@@ -57,6 +62,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 
 public final class UcdGpaCalculatorApp extends Application {
@@ -239,6 +245,7 @@ public final class UcdGpaCalculatorApp extends Application {
         card.getStyleClass().add("metric-card");
         card.setMinWidth(190);
         HBox.setHgrow(card, Priority.ALWAYS);
+        addHoverMotion(card, 1.018);
         return card;
     }
 
@@ -253,6 +260,7 @@ public final class UcdGpaCalculatorApp extends Application {
         card.getStyleClass().add("metric-card");
         card.setMinWidth(190);
         HBox.setHgrow(card, Priority.ALWAYS);
+        addHoverMotion(card, 1.018);
         return card;
     }
 
@@ -294,6 +302,74 @@ public final class UcdGpaCalculatorApp extends Application {
         wrapper.getStyleClass().add("percentage-ring");
         wrapper.setAlignment(Pos.CENTER);
         return wrapper;
+    }
+
+    private VBox moduleProgressWheel(ModuleProgress progress, AcademicModule module) {
+        double size = 118.0;
+        double strokeWidth = 9.0;
+        double inset = strokeWidth / 2.0 + 5.0;
+        double diameter = size - inset * 2.0;
+        double secured = Math.max(0.0, Math.min(100.0, progress.securedGrade()));
+        double completed = Math.max(0.0, Math.min(100.0, progress.completedWeight()));
+        double pass = Math.max(0.0, Math.min(100.0, module.passGrade()));
+
+        Canvas graphic = new Canvas(size, size);
+        GraphicsContext context = graphic.getGraphicsContext2D();
+        context.setLineCap(StrokeLineCap.ROUND);
+        context.setLineWidth(strokeWidth);
+        context.setStroke(Color.rgb(21, 50, 66, 0.10));
+        context.strokeOval(inset, inset, diameter, diameter);
+
+        if (completed > 0.0) {
+            context.setStroke(Color.rgb(21, 50, 66, 0.16));
+            context.strokeArc(inset, inset, diameter, diameter, 90.0, -completed / 100.0 * 360.0, javafx.scene.shape.ArcType.OPEN);
+        }
+        if (secured > 0.0) {
+            context.setStroke(Color.web(module.colour()));
+            context.strokeArc(inset, inset, diameter, diameter, 90.0, -secured / 100.0 * 360.0, javafx.scene.shape.ArcType.OPEN);
+        }
+
+        double angle = Math.toRadians(90.0 - pass / 100.0 * 360.0);
+        double center = size / 2.0;
+        double outerRadius = diameter / 2.0 + 7.0;
+        double innerRadius = diameter / 2.0 - 8.0;
+        context.setStroke(Color.web("#f2c94c"));
+        context.setLineWidth(4.0);
+        context.strokeLine(
+                center + Math.cos(angle) * innerRadius,
+                center - Math.sin(angle) * innerRadius,
+                center + Math.cos(angle) * outerRadius,
+                center - Math.sin(angle) * outerRadius
+        );
+
+        context.setTextAlign(TextAlignment.CENTER);
+        context.setTextBaseline(VPos.CENTER);
+        context.setFill(Color.web("#162b39"));
+        context.setFont(Font.font("Segoe UI", FontWeight.BOLD, 22.0));
+        context.fillText(percent(secured), center, center - 5.0);
+        context.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10.0));
+        context.setFill(Color.web("#647884"));
+        context.fillText("secured", center, center + 16.0);
+
+        Label complete = progressStat("Complete", progress.completedWeight(), "#162b39");
+        Label passMark = progressStat("Pass mark", module.passGrade(), "#9a6a00");
+        Label remaining = progressStat("Remaining", progress.remainingWeight(), "#647884");
+        HBox stats = new HBox(10, complete, passMark, remaining);
+        stats.setAlignment(Pos.CENTER);
+
+        VBox wheel = new VBox(7, graphic, stats);
+        wheel.getStyleClass().add("module-progress-wheel");
+        wheel.setAlignment(Pos.CENTER);
+        addHoverMotion(wheel, 1.035);
+        return wheel;
+    }
+
+    private Label progressStat(String labelText, double value, String colour) {
+        Label label = new Label(labelText + "\n" + percent(value));
+        label.getStyleClass().add("progress-stat");
+        label.setTextFill(Color.web(colour));
+        label.setAlignment(Pos.CENTER);
+        return label;
     }
 
     private VBox buildDashboardAssessmentChecklist(AcademicModule module) {
@@ -444,13 +520,6 @@ public final class UcdGpaCalculatorApp extends Application {
         HBox header = new HBox(6, new VBox(1, code, name), spacer(), status);
         header.setAlignment(Pos.TOP_LEFT);
 
-        HBox rings = new HBox(6,
-                percentageRing(progress.completedWeight(), module.colour(), "Complete", 48),
-                percentageRing(progress.securedGrade(), module.colour(), "Secured", 48),
-                percentageRing(module.passGrade(), module.colour(), "Pass", 48)
-        );
-        rings.getStyleClass().add("ring-row");
-
         Label nextAssessment = new Label(nextAssessmentText(module));
         nextAssessment.getStyleClass().add("next-deadline");
         nextAssessment.setWrapText(true);
@@ -461,7 +530,7 @@ public final class UcdGpaCalculatorApp extends Application {
         VBox card = new VBox(5,
                 moduleColourBar(module.colour()),
                 header,
-                rings,
+                moduleProgressWheel(progress, module),
                 buildTargetCalculator(progress),
                 buildDashboardAssessmentChecklist(module),
                 nextAssessment,
@@ -472,6 +541,7 @@ public final class UcdGpaCalculatorApp extends Application {
         card.setMaxWidth(Double.MAX_VALUE);
         card.setMinWidth(0);
         card.setStyle(moduleCardStyle(module.colour()));
+        addHoverMotion(card, 1.012);
 
         if (showActions) {
             Button open = new Button("Open Module");
@@ -1160,23 +1230,226 @@ public final class UcdGpaCalculatorApp extends Application {
     }
 
     private ScrollPane buildCalendarPage() {
-        DatePicker datePicker = new DatePicker(LocalDate.now());
-        VBox selectedDateItems = new VBox(10);
-        Runnable refreshDateItems = () -> selectedDateItems.getChildren().setAll(calendarItemsFor(datePicker.getValue()));
-        datePicker.valueProperty().addListener((observable, oldValue, newValue) -> refreshDateItems.run());
-        refreshDateItems.run();
+        LocalDate termStart = LocalDate.now()
+                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                .minusWeeks(1);
+        IntegerProperty selectedWeek = new SimpleIntegerProperty(currentTermWeek(termStart));
+        VBox selectedWeekItems = new VBox(10);
+        Label selectedTitle = new Label();
+        selectedTitle.getStyleClass().add("calendar-detail-title");
 
-        Label selectedTitle = new Label("Selected Date");
-        selectedTitle.getStyleClass().add("section-title");
-        VBox selectedPanel = new VBox(12, selectedTitle, datePicker, selectedDateItems);
-        selectedPanel.getStyleClass().add("panel");
+        GridPane timeline = new GridPane();
+        timeline.getStyleClass().add("term-grid");
+        timeline.setHgap(8);
+        timeline.setVgap(9);
+
+        List<Button> weekButtons = new ArrayList<>();
+        Runnable refreshSelection = () -> {
+            selectedWeekItems.getChildren().setAll(calendarItemsForWeek(termStart, selectedWeek.get()));
+            selectedTitle.setText("Week " + selectedWeek.get() + " - " + weekRange(termStart, selectedWeek.get()));
+            weekButtons.forEach(button -> button.getStyleClass().remove("week-button-active"));
+            if (selectedWeek.get() >= 1 && selectedWeek.get() <= weekButtons.size()) {
+                weekButtons.get(selectedWeek.get() - 1).getStyleClass().add("week-button-active");
+            }
+        };
+
+        Label modulesHeader = new Label("Your term");
+        modulesHeader.getStyleClass().add("term-axis-label");
+        timeline.add(modulesHeader, 0, 0);
+
+        for (int week = 1; week <= 12; week++) {
+            int targetWeek = week;
+            Button weekButton = new Button(week == currentTermWeek(termStart) ? week + "\nNOW" : String.valueOf(week));
+            weekButton.getStyleClass().add("week-button");
+            weekButton.setOnAction(event -> {
+                selectedWeek.set(targetWeek);
+                refreshSelection.run();
+            });
+            weekButtons.add(weekButton);
+            timeline.add(weekButton, week, 0);
+        }
+
+        Label examsHeader = new Label("EXAMS");
+        examsHeader.getStyleClass().add("term-axis-label");
+        timeline.add(examsHeader, 13, 0);
+
+        List<AcademicModule> modules = state.orderedModules();
+        for (int row = 0; row < modules.size(); row++) {
+            AcademicModule module = modules.get(row);
+            Label moduleName = new Label(module.displayName());
+            moduleName.getStyleClass().add("calendar-module-name");
+            Label moduleCode = new Label(module.moduleCode());
+            moduleCode.getStyleClass().add("calendar-module-code");
+            VBox moduleLabel = new VBox(2, new HBox(8, moduleColourRule(module.colour()), new VBox(1, moduleName, moduleCode)));
+            moduleLabel.getStyleClass().add("calendar-module-label");
+            timeline.add(moduleLabel, 0, row + 1);
+
+            for (int week = 1; week <= 12; week++) {
+                StackPane cell = calendarWeekCell(termStart, module, week, selectedWeek, refreshSelection);
+                timeline.add(cell, week, row + 1);
+            }
+
+            StackPane examCell = calendarExamCell(module);
+            timeline.add(examCell, 13, row + 1);
+        }
+
+        Label termTitle = new Label("Autumn 2026");
+        termTitle.getStyleClass().add("calendar-hero-title");
+        Label termMeta = new Label("Week " + currentTermWeek(termStart) + " of 12");
+        termMeta.getStyleClass().add("calendar-hero-meta");
+        Label credits = new Label(PERCENT_FORMAT.format(totalCredits()) + " credits - " + state.modules().size() + " modules");
+        credits.getStyleClass().add("calendar-credits");
+
+        VBox titleStack = new VBox(3, termTitle, termMeta);
+        HBox top = new HBox(12, titleStack, spacer(), credits);
+        top.setAlignment(Pos.TOP_LEFT);
+
+        Label headline = new Label(calendarHeadline(termStart));
+        headline.getStyleClass().add("calendar-headline");
+        headline.setWrapText(true);
+
+        VBox detailPanel = new VBox(14, new HBox(selectedTitle, spacer()), selectedWeekItems);
+        detailPanel.getStyleClass().add("calendar-detail-panel");
+
+        VBox calendar = new VBox(22, top, headline, timeline, detailPanel);
+        calendar.getStyleClass().add("calendar-board");
+        refreshSelection.run();
 
         return page(
                 "Calendar",
-                "Assessment and task deadlines by date",
-                selectedPanel,
+                "Assessment and task deadlines by week",
+                calendar,
                 buildUpcomingDeadlinesPanel(20)
         );
+    }
+
+    private int currentTermWeek(LocalDate termStart) {
+        return (int) Math.max(1, Math.min(12, ChronoUnit.WEEKS.between(termStart, LocalDate.now()) + 1));
+    }
+
+    private double totalCredits() {
+        return state.modules().stream().mapToDouble(AcademicModule::credits).sum();
+    }
+
+    private String weekRange(LocalDate termStart, int week) {
+        LocalDate start = termStart.plusWeeks(week - 1L);
+        LocalDate end = start.plusDays(6);
+        return start.format(DateTimeFormatter.ofPattern("d MMM")) + "-" + end.format(DateTimeFormatter.ofPattern("d MMM"));
+    }
+
+    private String calendarHeadline(LocalDate termStart) {
+        int nextWeek = Math.min(12, currentTermWeek(termStart) + 1);
+        List<DeadlineItem> items = deadlinesForWeek(termStart, nextWeek);
+        double termShare = items.stream().mapToDouble(this::deadlineWeight).sum();
+        if (items.isEmpty()) {
+            return "Nothing due next week. Use the clear lane to get ahead.";
+        }
+        long modulesDue = items.stream().map(DeadlineItem::moduleId).distinct().count();
+        return "Next week: " + percent(termShare) + " of your term across " + modulesDue + " module" + (modulesDue == 1 ? "." : "s.");
+    }
+
+    private StackPane calendarWeekCell(LocalDate termStart, AcademicModule module, int week, IntegerProperty selectedWeek, Runnable refreshSelection) {
+        List<DeadlineItem> items = deadlinesForWeek(termStart, week).stream()
+                .filter(item -> module.id().equals(item.moduleId()))
+                .toList();
+        StackPane cell = new StackPane();
+        cell.getStyleClass().add("term-cell");
+        if (items.isEmpty()) {
+            Label dot = new Label("-");
+            dot.getStyleClass().add("calendar-dot");
+            cell.getChildren().add(dot);
+        } else {
+            double weight = items.stream().mapToDouble(this::deadlineWeight).sum();
+            Label pill = new Label(percent(weight));
+            pill.getStyleClass().add("deadline-pill");
+            cell.getChildren().add(pill);
+            addHoverMotion(pill, 1.08);
+        }
+        cell.setOnMouseClicked(event -> {
+            selectedWeek.set(week);
+            refreshSelection.run();
+        });
+        return cell;
+    }
+
+    private StackPane calendarExamCell(AcademicModule module) {
+        double pass = module.passGrade();
+        Label pill = new Label(percent(pass));
+        pill.getStyleClass().add("exam-pill");
+        StackPane cell = new StackPane(pill);
+        cell.getStyleClass().add("term-cell");
+        addHoverMotion(pill, 1.08);
+        return cell;
+    }
+
+    private List<Node> calendarItemsForWeek(LocalDate termStart, int week) {
+        List<DeadlineItem> items = deadlinesForWeek(termStart, week);
+        if (items.isEmpty()) {
+            Label empty = new Label("Nothing due in this week.");
+            empty.getStyleClass().add("calendar-empty");
+            return List.of(empty);
+        }
+        return items.stream().map(item -> (Node) calendarDetailRow(item)).toList();
+    }
+
+    private HBox calendarDetailRow(DeadlineItem item) {
+        Label module = new Label(moduleName(item.moduleId()));
+        module.getStyleClass().add("calendar-detail-module");
+        Label title = new Label(item.title());
+        title.getStyleClass().add("calendar-detail-assessment");
+        Label type = new Label(item.type());
+        type.getStyleClass().add("calendar-detail-type");
+        Label weight = new Label(percent(deadlineWeight(item)));
+        weight.getStyleClass().add("calendar-detail-weight");
+        Label date = new Label(formatDate(item.dueDate()));
+        date.getStyleClass().add("calendar-detail-date");
+        HBox row = new HBox(18, new VBox(3, module, date), new VBox(4, title, type), spacer(), weight);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.getStyleClass().add("calendar-detail-row");
+        addHoverMotion(row, 1.01);
+        return row;
+    }
+
+    private List<DeadlineItem> deadlinesForWeek(LocalDate termStart, int week) {
+        LocalDate start = termStart.plusWeeks(week - 1L);
+        LocalDate end = start.plusDays(6);
+        return allOpenDeadlines().stream()
+                .filter(item -> item.dueDate() != null && !item.dueDate().isBefore(start) && !item.dueDate().isAfter(end))
+                .sorted(Comparator.comparing(DeadlineItem::dueDate).thenComparing(DeadlineItem::title))
+                .toList();
+    }
+
+    private List<DeadlineItem> allOpenDeadlines() {
+        List<DeadlineItem> deadlines = new ArrayList<>();
+        state.assessments().stream()
+                .filter(assessment -> !assessment.completed())
+                .forEach(assessment -> deadlines.add(new DeadlineItem(
+                        assessment.dueDate(),
+                        assessment.name(),
+                        "Assessment",
+                        assessment.moduleId(),
+                        assessment.url(),
+                        ""
+                )));
+        state.tasks().stream()
+                .filter(task -> !task.completed())
+                .forEach(task -> deadlines.add(new DeadlineItem(
+                        task.dueDate(),
+                        task.title(),
+                        "Task",
+                        task.moduleId(),
+                        task.url(),
+                        task.priority()
+                )));
+        return deadlines;
+    }
+
+    private double deadlineWeight(DeadlineItem item) {
+        return state.assessments().stream()
+                .filter(assessment -> assessment.moduleId().equals(item.moduleId()) && assessment.name().equals(item.title()))
+                .findFirst()
+                .map(AssessmentEntry::weight)
+                .orElse(0.0);
     }
 
     private List<Node> calendarItemsFor(LocalDate date) {
@@ -1690,6 +1963,7 @@ public final class UcdGpaCalculatorApp extends Application {
     private Button smallButton(String text) {
         Button button = new Button(text);
         button.getStyleClass().add("small-button");
+        addHoverMotion(button, 1.04);
         return button;
     }
 
@@ -1699,6 +1973,7 @@ public final class UcdGpaCalculatorApp extends Application {
         button.setPrefSize(size, size);
         button.setMaxSize(size, size);
         button.getStyleClass().add("circle-button");
+        addHoverMotion(button, 1.06);
         return button;
     }
 
@@ -1892,6 +2167,18 @@ public final class UcdGpaCalculatorApp extends Application {
         if (!node.getStyleClass().contains(styleClass)) {
             node.getStyleClass().add(styleClass);
         }
+    }
+
+    private void addHoverMotion(Node node, double hoverScale) {
+        node.setOnMouseEntered(event -> animateScale(node, hoverScale));
+        node.setOnMouseExited(event -> animateScale(node, 1.0));
+    }
+
+    private void animateScale(Node node, double scale) {
+        ScaleTransition transition = new ScaleTransition(Duration.millis(140), node);
+        transition.setToX(scale);
+        transition.setToY(scale);
+        transition.play();
     }
 
     private static String scaleButtonText(GradeScale scale) {
