@@ -218,6 +218,34 @@
     -fx-padding: 6 0 4 0;
 }
 
+.module-overview-strip {
+    -fx-padding: 10;
+    -fx-background-color: rgba(255, 255, 255, 0.72);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(60, 60, 67, 0.10);
+    -fx-border-radius: 12;
+}
+
+.overview-module {
+    -fx-min-width: 104px;
+    -fx-pref-width: 104px;
+    -fx-padding: 6;
+    -fx-background-radius: 9;
+}
+
+.overview-module:hover {
+    -fx-background-color: rgba(0, 122, 255, 0.08);
+}
+
+.overview-module-name {
+    -fx-font-size: 10px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #314756;
+    -fx-text-alignment: center;
+    -fx-alignment: center;
+    -fx-max-width: 94px;
+}
+
 .progress-stat {
     -fx-font-size: 10px;
     -fx-font-weight: 900;
@@ -439,11 +467,11 @@
 .exam-pill {
     -fx-background-color: #202633;
     -fx-background-radius: 12;
-    -fx-padding: 8 14;
-    -fx-font-size: 12px;
+    -fx-padding: 6 7;
+    -fx-font-size: 11px;
     -fx-font-weight: 900;
     -fx-text-fill: white;
-    -fx-min-width: 48px;
+    -fx-min-width: 34px;
     -fx-alignment: center;
 }
 
@@ -501,6 +529,604 @@
 .calendar-empty {
     -fx-text-fill: #c8d7ef;
     -fx-font-weight: 800;
+}
+
+.calendar-detail-notes {
+    -fx-text-fill: #b7c7d6;
+    -fx-font-size: 12px;
+}
+
+.calendar-zoom-controls {
+    -fx-background-color: #202633;
+    -fx-background-radius: 8;
+    -fx-padding: 4;
+}
+
+.calendar-zoom-label {
+    -fx-text-fill: #c8d7ef;
+    -fx-font-weight: 900;
+    -fx-min-width: 38px;
+    -fx-alignment: center;
+}
+
+.timeline-scroll,
+.timeline-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.final-badge {
+    -fx-background-color: #6d4aff;
+    -fx-background-radius: 999;
+    -fx-padding: 4 8;
+    -fx-text-fill: white;
+    -fx-font-size: 10px;
+    -fx-font-weight: 900;
+}
+
+.theme-toggle {
+    -fx-background-color: #e7edf0;
+    -fx-background-radius: 8;
+    -fx-text-fill: #153242;
+    -fx-font-weight: 900;
+    -fx-padding: 8 10;
+    -fx-cursor: hand;
+}
+
+/* App-wide dark theme */
+.dark-theme {
+    -fx-background-color: #111318;
+    -fx-text-fill: #edf2f7;
+}
+
+.dark-theme .sidebar {
+    -fx-background-color: #171a20;
+    -fx-border-color: transparent #2b3039 transparent transparent;
+}
+
+.dark-theme .sidebar-title,
+.dark-theme .page-title,
+.dark-theme .hero-title,
+.dark-theme .section-title,
+.dark-theme .metric-value,
+.dark-theme .empty-title,
+.dark-theme .card-title,
+.dark-theme .row-title,
+.dark-theme .reference-title,
+.dark-theme .field-label,
+.dark-theme .table-header,
+.dark-theme .stat-value,
+.dark-theme .assessment-title {
+    -fx-text-fill: #f5f7fa;
+}
+
+.dark-theme .sidebar-subtitle,
+.dark-theme .page-subtitle,
+.dark-theme .muted,
+.dark-theme .metric-label,
+.dark-theme .eyebrow,
+.dark-theme .small-label,
+.dark-theme .storage-note,
+.dark-theme .ring-label {
+    -fx-text-fill: #9aa9b6;
+}
+
+.dark-theme .nav-button {
+    -fx-text-fill: #c9d3dc;
+}
+
+.dark-theme .nav-button:hover,
+.dark-theme .overview-module:hover {
+    -fx-background-color: rgba(90, 165, 255, 0.12);
+}
+
+.dark-theme .nav-button-active {
+    -fx-background-color: rgba(90, 165, 255, 0.18);
+    -fx-text-fill: #76b6ff;
+}
+
+.dark-theme .logo-plate,
+.dark-theme .metric-card,
+.dark-theme .panel,
+.dark-theme .empty-state,
+.dark-theme .subject-card,
+.dark-theme .calculator-toolbar,
+.dark-theme .module-overview-strip {
+    -fx-background-color: #1c2027;
+    -fx-border-color: #303640;
+}
+
+.dark-theme .storage-note,
+.dark-theme .list-row,
+.dark-theme .subsection,
+.dark-theme .dashboard-assessments,
+.dark-theme .dashboard-assessment-row,
+.dark-theme .next-deadline,
+.dark-theme .target-result {
+    -fx-background-color: #20252d;
+    -fx-border-color: #303640;
+}
+
+.dark-theme .overview-module-name,
+.dark-theme .task-description,
+.dark-theme .target-message,
+.dark-theme .credits-pill {
+    -fx-text-fill: #dce5ec;
+}
+
+.dark-theme .credits-pill,
+.dark-theme .secondary-button,
+.dark-theme .small-button,
+.dark-theme .target-button,
+.dark-theme .theme-toggle {
+    -fx-background-color: #2a3039;
+    -fx-text-fill: #edf2f7;
+    -fx-border-color: #3b4350;
+    -fx-border-radius: 8;
+}
+
+.dark-theme .secondary-button:hover,
+.dark-theme .small-button:hover,
+.dark-theme .target-button:hover,
+.dark-theme .theme-toggle:hover {
+    -fx-background-color: #353d48;
+}
+
+.dark-theme .number-field,
+.dark-theme .compact-number-field,
+.dark-theme .combo-box,
+.dark-theme .date-picker,
+.dark-theme .text-area,
+.dark-theme .dashboard-grade-field {
+    -fx-background-color: #20252d;
+    -fx-border-color: #3b4350;
+    -fx-text-fill: #edf2f7;
+    -fx-prompt-text-fill: #73808c;
+}
+
+.dark-theme .text-input,
+.dark-theme .text-area .content,
+.dark-theme .combo-box .list-cell,
+.dark-theme .date-picker .text-field {
+    -fx-background-color: #20252d;
+    -fx-text-fill: #edf2f7;
+}
+
+.dark-theme .check-box {
+    -fx-text-fill: #dce5ec;
+}
+
+.dark-theme .date-pill,
+.dark-theme .classification-pill,
+.dark-theme .segmented {
+    -fx-background-color: #2a3039;
+    -fx-text-fill: #dce5ec;
+}
+
+.dark-theme .mode-toggle,
+.dark-theme .small-scale-button,
+.dark-theme .suffix-button {
+    -fx-text-fill: #dce5ec;
+}
+
+.dark-theme .calendar-board {
+    -fx-background-color: #171a20;
+    -fx-border-color: #303640;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.32), 24, 0.20, 0, 8);
+}
+
+.dark-theme .calendar-detail-panel {
+    -fx-background-color: #1f242c;
+    -fx-border-color: #343b46;
+}
+
+.dark-theme .progress-bar > .track {
+    -fx-background-color: #303640;
+}
+
+/* WattVision-inspired technical dashboard theme. */
+.dark-theme {
+    -fx-background-color: #121212;
+    -fx-font-family: "Inter", "Segoe UI", sans-serif;
+    -fx-font-size: 14px;
+}
+
+.dark-theme .sidebar {
+    -fx-background-color: #171717;
+    -fx-border-color: transparent #2c2c2e transparent transparent;
+    -fx-padding: 16 12;
+}
+
+.dark-theme .logo-plate {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: #2c2c2e;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-effect: none;
+}
+
+.dark-theme .sidebar-title {
+    -fx-font-size: 17px;
+}
+
+.dark-theme .nav-button {
+    -fx-padding: 9 10;
+    -fx-background-radius: 8;
+    -fx-font-size: 12px;
+}
+
+.dark-theme .nav-button:hover {
+    -fx-background-color: #252525;
+    -fx-text-fill: #ffffff;
+}
+
+.dark-theme .nav-button-active {
+    -fx-background-color: rgba(0, 229, 255, 0.12);
+    -fx-text-fill: #00e5ff;
+    -fx-border-color: transparent transparent transparent #00e5ff;
+    -fx-border-width: 0 0 0 3;
+}
+
+.dark-theme .page-content {
+    -fx-padding: 24;
+    -fx-spacing: 16;
+}
+
+.dark-theme .page-title,
+.dark-theme .hero-title {
+    -fx-font-family: "Inter", "Segoe UI", sans-serif;
+    -fx-font-size: 24px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #ffffff;
+}
+
+.dark-theme .section-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: 800;
+}
+
+.dark-theme .metric-strip,
+.dark-theme .two-column-row {
+    -fx-spacing: 16;
+}
+
+.dark-theme .metric-card,
+.dark-theme .module-card,
+.dark-theme .task-card,
+.dark-theme .panel,
+.dark-theme .empty-state,
+.dark-theme .subject-card,
+.dark-theme .calculator-toolbar,
+.dark-theme .module-overview-strip {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: #2c2c2e;
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.18), 6, 0.10, 0, 2);
+}
+
+.dark-theme .metric-card:hover,
+.dark-theme .module-card:hover,
+.dark-theme .task-card:hover,
+.dark-theme .panel:hover {
+    -fx-border-color: #3a3a3c;
+    -fx-effect: dropshadow(gaussian, rgba(0, 229, 255, 0.08), 14, 0.12, 0, 4);
+}
+
+.dark-theme .metric-card {
+    -fx-padding: 20;
+    -fx-min-height: 132px;
+}
+
+.dark-theme .panel,
+.dark-theme .empty-state {
+    -fx-padding: 20;
+}
+
+.dark-theme .metric-value,
+.dark-theme .stat-value,
+.dark-theme .calendar-detail-weight,
+.dark-theme .gpa-pill {
+    -fx-font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    -fx-font-weight: 800;
+}
+
+.dark-theme .metric-value {
+    -fx-font-size: 30px;
+    -fx-text-fill: #00e5ff;
+}
+
+.dark-theme .metric-label,
+.dark-theme .eyebrow,
+.dark-theme .small-label {
+    -fx-text-fill: #98989d;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+}
+
+.dark-theme .module-overview-strip {
+    -fx-padding: 12;
+    -fx-spacing: 8;
+}
+
+.dark-theme .overview-module {
+    -fx-background-radius: 10;
+    -fx-padding: 8;
+}
+
+.dark-theme .overview-module:hover {
+    -fx-background-color: #252525;
+}
+
+.dark-theme .overview-module-name {
+    -fx-text-fill: #d7d7db;
+}
+
+.dark-theme .dashboard-assessments,
+.dark-theme .dashboard-assessment-row {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+}
+
+.dark-theme .dashboard-assessment-row {
+    -fx-border-color: transparent transparent #2c2c2e transparent;
+    -fx-padding: 7 4;
+}
+
+.dark-theme .list-row,
+.dark-theme .subsection {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: transparent transparent #2c2c2e transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-radius: 8;
+    -fx-padding: 10 12;
+}
+
+.dark-theme .list-row:hover,
+.dark-theme .calendar-detail-row:hover {
+    -fx-background-color: #252525;
+    -fx-effect: none;
+}
+
+.dark-theme .primary-button {
+    -fx-background-color: #00e5ff;
+    -fx-text-fill: #071416;
+    -fx-background-radius: 8;
+    -fx-padding: 10 16;
+}
+
+.dark-theme .primary-button:hover {
+    -fx-background-color: #5bf0ff;
+}
+
+.dark-theme .secondary-button,
+.dark-theme .small-button,
+.dark-theme .target-button,
+.dark-theme .theme-toggle {
+    -fx-background-color: #252525;
+    -fx-text-fill: #d9faff;
+    -fx-border-color: #3a3a3c;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.dark-theme .secondary-button:hover,
+.dark-theme .small-button:hover,
+.dark-theme .target-button:hover,
+.dark-theme .theme-toggle:hover {
+    -fx-background-color: rgba(0, 229, 255, 0.10);
+    -fx-border-color: #00e5ff;
+    -fx-text-fill: #00e5ff;
+}
+
+.dark-theme .danger-button {
+    -fx-background-color: #3a1c1c;
+    -fx-border-color: #ff453a;
+    -fx-text-fill: #ff6b63;
+}
+
+.dark-theme .number-field,
+.dark-theme .compact-number-field,
+.dark-theme .combo-box,
+.dark-theme .date-picker,
+.dark-theme .text-area,
+.dark-theme .dashboard-grade-field {
+    -fx-background-color: #191919;
+    -fx-border-color: #3a3a3c;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.dark-theme .number-field:focused,
+.dark-theme .compact-number-field:focused,
+.dark-theme .combo-box:focused,
+.dark-theme .date-picker:focused,
+.dark-theme .text-area:focused,
+.dark-theme .dashboard-grade-field:focused {
+    -fx-border-color: #00e5ff;
+    -fx-effect: dropshadow(gaussian, rgba(0, 229, 255, 0.18), 7, 0.20, 0, 0);
+}
+
+.dark-theme .status-passed,
+.dark-theme .status-track {
+    -fx-background-color: rgba(50, 215, 75, 0.14);
+    -fx-text-fill: #32d74b;
+}
+
+.dark-theme .status-risk {
+    -fx-background-color: rgba(245, 158, 11, 0.16);
+    -fx-text-fill: #ffb340;
+}
+
+.dark-theme .status-critical,
+.dark-theme .danger-button {
+    -fx-background-color: #3a1c1c;
+    -fx-text-fill: #ff453a;
+}
+
+.dark-theme .ok-text {
+    -fx-text-fill: #32d74b;
+}
+
+.dark-theme .warning-text {
+    -fx-text-fill: #ffb340;
+}
+
+.dark-theme .calendar-board {
+    -fx-background-color: #181818;
+    -fx-border-color: #2c2c2e;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 24;
+    -fx-effect: none;
+}
+
+.dark-theme .calendar-detail-panel {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: #2c2c2e;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+}
+
+.dark-theme .week-button-active {
+    -fx-background-color: rgba(0, 229, 255, 0.12);
+    -fx-border-color: #00e5ff;
+    -fx-text-fill: #00e5ff;
+}
+
+.dark-theme .week-button {
+    -fx-padding: 3 1;
+    -fx-font-size: 11px;
+}
+
+.dark-theme .week-button:hover {
+    -fx-background-color: #252525;
+    -fx-text-fill: #ffffff;
+}
+
+.dark-theme .deadline-pill,
+.dark-theme .exam-pill,
+.dark-theme .calendar-detail-type {
+    -fx-background-color: rgba(0, 229, 255, 0.10);
+    -fx-text-fill: #00e5ff;
+}
+
+.dark-theme .final-badge {
+    -fx-background-color: rgba(255, 69, 58, 0.16);
+    -fx-text-fill: #ff6b63;
+}
+
+.dark-theme .calendar-zoom-controls {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: #2c2c2e;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.dark-theme .progress-bar > .track {
+    -fx-background-color: #2c2c2e;
+}
+
+.dark-theme .progress-bar > .bar {
+    -fx-background-color: #00e5ff;
+}
+
+.dark-theme .circle-button,
+.dark-theme .mode-toggle:selected,
+.dark-theme .small-scale-button:selected,
+.dark-theme .suffix-button:selected {
+    -fx-background-color: #00e5ff;
+    -fx-text-fill: #071416;
+}
+
+.calendar-week-highlight {
+    -fx-background-color: transparent;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-border-color: transparent;
+}
+
+.calendar-week-selected {
+    -fx-background-color: rgba(0, 229, 255, 0.055);
+    -fx-border-color: rgba(0, 229, 255, 0.42);
+}
+
+.calendar-module-highlight {
+    -fx-background-color: transparent;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-border-color: transparent;
+}
+
+.calendar-module-selected {
+    -fx-background-color: rgba(0, 229, 255, 0.075);
+    -fx-border-color: rgba(0, 229, 255, 0.24);
+}
+
+.calendar-share-label {
+    -fx-text-fill: #98989d;
+    -fx-font-size: 10px;
+    -fx-font-weight: 700;
+    -fx-padding: 12 0 0 0;
+}
+
+.calendar-total-cell {
+    -fx-min-height: 40px;
+    -fx-pref-height: 40px;
+    -fx-padding: 1 2 0 2;
+}
+
+.calendar-total-value {
+    -fx-text-fill: #c9faff;
+    -fx-font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    -fx-font-size: 10px;
+    -fx-font-weight: 800;
+}
+
+.calendar-total-bar,
+.calendar-total-bar-exam {
+    -fx-background-color: rgba(0, 229, 255, 0.68);
+    -fx-background-radius: 2 2 0 0;
+    -fx-min-width: 26px;
+    -fx-pref-width: 32px;
+    -fx-max-width: 38px;
+}
+
+.calendar-total-bar-exam {
+    -fx-background-color: rgba(152, 152, 157, 0.82);
+}
+
+.dark-theme .results-grid .gpa-result-cell,
+.dark-theme .reference-scale .label,
+.dark-theme .results-grid .label {
+    -fx-text-fill: #f5f7fa;
+}
+
+.dark-theme .gpa-result-cell {
+    -fx-font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    -fx-font-size: 13px;
+}
+
+.dark-theme .reference-scale {
+    -fx-background-color: #191919;
+    -fx-border-color: #2c2c2e;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.dark-theme .reference-grid .label {
+    -fx-text-fill: #e7edf2;
+}
+
+.dark-theme .reference-grid .table-header {
+    -fx-text-fill: #ffffff;
+}
+
+.dark-theme .separator .line {
+    -fx-border-color: #3a3a3c;
+    -fx-border-width: 1 0 0 0;
 }
 
 .subsection {

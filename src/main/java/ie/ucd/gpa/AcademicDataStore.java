@@ -64,7 +64,9 @@ final class AcademicDataStore {
                     booleanProperty(properties, prefix + "completed", false),
                     dateProperty(properties, prefix + "due_date"),
                     property(properties, prefix + "notes", ""),
-                    property(properties, prefix + "url", "")
+                    property(properties, prefix + "url", ""),
+                    booleanProperty(properties, prefix + "final_exam", false),
+                    optionalIntProperty(properties, prefix + "term_week")
             ));
         }
 
@@ -123,6 +125,8 @@ final class AcademicDataStore {
             put(properties, prefix + "due_date", assessment.dueDate());
             put(properties, prefix + "notes", assessment.notes());
             put(properties, prefix + "url", assessment.url());
+            put(properties, prefix + "final_exam", assessment.finalExam());
+            put(properties, prefix + "term_week", assessment.termWeek());
         }
 
         properties.setProperty("task.count", String.valueOf(state.tasks().size()));
@@ -177,6 +181,18 @@ final class AcademicDataStore {
         }
         try {
             return Double.parseDouble(value);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private static Integer optionalIntProperty(Properties properties, String key) {
+        String value = property(properties, key, "");
+        if (value.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value);
         } catch (NumberFormatException ex) {
             return null;
         }

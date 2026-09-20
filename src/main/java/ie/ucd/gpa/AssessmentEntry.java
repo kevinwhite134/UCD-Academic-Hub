@@ -13,6 +13,8 @@ final class AssessmentEntry {
     private LocalDate dueDate;
     private String notes;
     private String url;
+    private boolean finalExam;
+    private Integer termWeek;
 
     AssessmentEntry(
             String id,
@@ -23,7 +25,9 @@ final class AssessmentEntry {
             boolean completed,
             LocalDate dueDate,
             String notes,
-            String url
+            String url,
+            boolean finalExam,
+            Integer termWeek
     ) {
         this.id = id;
         this.moduleId = moduleId;
@@ -34,6 +38,8 @@ final class AssessmentEntry {
         this.dueDate = dueDate;
         this.notes = notes;
         this.url = url;
+        this.finalExam = finalExam;
+        this.termWeek = termWeek;
     }
 
     static AssessmentEntry create(
@@ -46,6 +52,35 @@ final class AssessmentEntry {
             String notes,
             String url
     ) {
+        return create(moduleId, name, weight, grade, completed, dueDate, notes, url, false, null);
+    }
+
+    static AssessmentEntry create(
+            String moduleId,
+            String name,
+            double weight,
+            Double grade,
+            boolean completed,
+            LocalDate dueDate,
+            String notes,
+            String url,
+            boolean finalExam
+    ) {
+        return create(moduleId, name, weight, grade, completed, dueDate, notes, url, finalExam, null);
+    }
+
+    static AssessmentEntry create(
+            String moduleId,
+            String name,
+            double weight,
+            Double grade,
+            boolean completed,
+            LocalDate dueDate,
+            String notes,
+            String url,
+            boolean finalExam,
+            Integer termWeek
+    ) {
         return new AssessmentEntry(
                 UUID.randomUUID().toString(),
                 moduleId,
@@ -55,7 +90,9 @@ final class AssessmentEntry {
                 completed,
                 dueDate,
                 notes,
-                url
+                url,
+                finalExam,
+                termWeek
         );
     }
 
@@ -125,6 +162,22 @@ final class AssessmentEntry {
 
     void setUrl(String url) {
         this.url = url;
+    }
+
+    boolean finalExam() {
+        return finalExam;
+    }
+
+    void setFinalExam(boolean finalExam) {
+        this.finalExam = finalExam;
+    }
+
+    Integer termWeek() {
+        return termWeek;
+    }
+
+    void setTermWeek(Integer termWeek) {
+        this.termWeek = termWeek;
     }
 
     double earnedContribution() {
