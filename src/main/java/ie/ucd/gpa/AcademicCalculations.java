@@ -83,9 +83,9 @@ final class AcademicCalculations {
                 .sum();
     }
 
-    private static List<DeadlineItem> allDeadlines(AcademicHubState state, boolean includeCompletedTasks) {
+    private static List<DeadlineItem> allDeadlines(AcademicHubState state, boolean includeCompletedItems) {
         List<DeadlineItem> assessmentDeadlines = state.assessments().stream()
-                .filter(assessment -> !assessment.completed())
+                .filter(assessment -> includeCompletedItems || !assessment.completed())
                 .map(assessment -> new DeadlineItem(
                         assessment.dueDate(),
                         assessment.name(),
@@ -93,11 +93,11 @@ final class AcademicCalculations {
                         assessment.moduleId(),
                         assessment.url(),
                         "",
-                        false
+                        assessment.completed()
                 ))
                 .toList();
         List<DeadlineItem> taskDeadlines = state.tasks().stream()
-                .filter(task -> includeCompletedTasks || !task.completed())
+                .filter(task -> includeCompletedItems || !task.completed())
                 .map(task -> new DeadlineItem(
                         task.dueDate(),
                         task.title(),

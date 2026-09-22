@@ -64,18 +64,22 @@ final class AcademicCalculationsTest {
     }
 
     @Test
-    void keepsCompletedTasksOnCalendarDateButOutOfUpcomingDeadlines() {
+    void keepsCompletedItemsOnCalendarDateButOutOfUpcomingDeadlines() {
         AcademicHubState state = new AcademicHubState();
         AcademicModule module = module("Compilers", 40.0, 5.0);
         LocalDate dueDate = LocalDate.now().plusDays(2);
         state.modules().add(module);
+        AssessmentEntry completedAssessment = assessment(module, "Parser project", 30.0, 75.0, true);
+        completedAssessment.setDueDate(dueDate);
+        state.assessments().add(completedAssessment);
         state.tasks().add(task(module, "Submit parser", dueDate, true));
         state.tasks().add(task(module, "Read lexer notes", dueDate, false));
 
         List<DeadlineItem> dateItems = AcademicCalculations.deadlinesForDate(state, dueDate);
         List<DeadlineItem> upcomingItems = AcademicCalculations.upcomingDeadlines(state, 10);
 
-        assertEquals(2, dateItems.size());
+        assertEquals(3, dateItems.size());
+        assertTrue(dateItems.stream().anyMatch(item -> item.title().equals("Parser project") && item.completed()));
         assertTrue(dateItems.stream().anyMatch(item -> item.title().equals("Submit parser") && item.completed()));
         assertEquals(1, upcomingItems.size());
         assertEquals("Read lexer notes", upcomingItems.getFirst().title());

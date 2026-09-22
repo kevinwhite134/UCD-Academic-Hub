@@ -124,18 +124,6 @@
     -fx-effect: dropshadow(gaussian, rgba(24, 39, 75, 0.18), 24, 0.24, 0, 10);
 }
 
-.page-scroll.scrolling .metric-card:hover,
-.page-scroll.scrolling .module-card:hover,
-.page-scroll.scrolling .task-card:hover,
-.page-scroll.scrolling .panel:hover {
-    -fx-effect: dropshadow(gaussian, rgba(24, 39, 75, 0.08), 18, 0.18, 0, 6);
-}
-
-.page-scroll.scrolling .list-row:hover,
-.page-scroll.scrolling .calendar-detail-row:hover {
-    -fx-effect: null;
-}
-
 .metric-card {
     -fx-padding: 14;
 }
@@ -344,6 +332,63 @@
     -fx-background-color: rgba(255, 255, 255, 0.60);
     -fx-background-radius: 9;
     -fx-padding: 4 6;
+}
+
+.dashboard-assessment-row-completed {
+    -fx-background-color: rgba(57, 255, 20, 0.10);
+    -fx-border-color: rgba(57, 255, 20, 0.58);
+    -fx-border-width: 0 0 0 3;
+    -fx-border-radius: 3;
+}
+
+.dashboard-assessment-row-completed .assessment-title,
+.dashboard-assessment-row-completed .muted {
+    -fx-text-fill: #159400;
+}
+
+.completion-check {
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.completion-check > .box {
+    -fx-pref-width: 24;
+    -fx-pref-height: 24;
+    -fx-min-width: 24;
+    -fx-min-height: 24;
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 6;
+    -fx-border-color: #aab7c0;
+    -fx-border-radius: 6;
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(gaussian, rgba(22, 43, 57, 0.12), 4, 0, 0, 1);
+}
+
+.completion-check:hover > .box {
+    -fx-border-color: #00b8cc;
+}
+
+.completion-check:selected > .box {
+    -fx-background-color: #39ff14;
+    -fx-border-color: #39ff14;
+    -fx-effect: dropshadow(gaussian, rgba(57, 255, 20, 0.45), 8, 0.2, 0, 0);
+}
+
+.completion-check:selected > .box > .mark {
+    -fx-background-color: #082d10;
+    -fx-padding: 5;
+}
+
+.assessment-done-icon {
+    -fx-alignment: center;
+    -fx-min-width: 24;
+    -fx-min-height: 24;
+    -fx-background-color: #39ff14;
+    -fx-background-radius: 12;
+    -fx-text-fill: #082d10;
+    -fx-font-size: 14px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(gaussian, rgba(57, 255, 20, 0.42), 8, 0.2, 0, 0);
 }
 
 .assessment-title {
@@ -847,14 +892,6 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 229, 255, 0.08), 14, 0.12, 0, 4);
 }
 
-.dark-theme .page-scroll.scrolling .metric-card:hover,
-.dark-theme .page-scroll.scrolling .module-card:hover,
-.dark-theme .page-scroll.scrolling .task-card:hover,
-.dark-theme .page-scroll.scrolling .panel:hover {
-    -fx-border-color: #2c2c2e;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.18), 6, 0.10, 0, 2);
-}
-
 .dark-theme .metric-card {
     -fx-padding: 20;
     -fx-min-height: 132px;
@@ -913,6 +950,31 @@
 .dark-theme .dashboard-assessment-row {
     -fx-border-color: transparent transparent #2c2c2e transparent;
     -fx-padding: 7 4;
+}
+
+.dark-theme .dashboard-assessment-row-completed {
+    -fx-background-color: rgba(57, 255, 20, 0.08);
+    -fx-border-color: transparent transparent #39ff14 #39ff14;
+    -fx-border-width: 0 0 1 3;
+}
+
+.dark-theme .dashboard-assessment-row-completed .assessment-title,
+.dark-theme .dashboard-assessment-row-completed .muted {
+    -fx-text-fill: #72ff59;
+}
+
+.dark-theme .completion-check > .box {
+    -fx-background-color: #252a30;
+    -fx-border-color: #697681;
+}
+
+.dark-theme .completion-check:hover > .box {
+    -fx-border-color: #00e5ff;
+}
+
+.dark-theme .completion-check:selected > .box {
+    -fx-background-color: #39ff14;
+    -fx-border-color: #39ff14;
 }
 
 .dark-theme .list-row,
