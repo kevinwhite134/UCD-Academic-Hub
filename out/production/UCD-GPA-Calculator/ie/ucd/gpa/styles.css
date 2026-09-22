@@ -124,6 +124,18 @@
     -fx-effect: dropshadow(gaussian, rgba(24, 39, 75, 0.18), 24, 0.24, 0, 10);
 }
 
+.page-scroll.scrolling .metric-card:hover,
+.page-scroll.scrolling .module-card:hover,
+.page-scroll.scrolling .task-card:hover,
+.page-scroll.scrolling .panel:hover {
+    -fx-effect: dropshadow(gaussian, rgba(24, 39, 75, 0.08), 18, 0.18, 0, 6);
+}
+
+.page-scroll.scrolling .list-row:hover,
+.page-scroll.scrolling .calendar-detail-row:hover {
+    -fx-effect: null;
+}
+
 .metric-card {
     -fx-padding: 14;
 }
@@ -811,6 +823,14 @@
 .dark-theme .panel:hover {
     -fx-border-color: #3a3a3c;
     -fx-effect: dropshadow(gaussian, rgba(0, 229, 255, 0.08), 14, 0.12, 0, 4);
+}
+
+.dark-theme .page-scroll.scrolling .metric-card:hover,
+.dark-theme .page-scroll.scrolling .module-card:hover,
+.dark-theme .page-scroll.scrolling .task-card:hover,
+.dark-theme .page-scroll.scrolling .panel:hover {
+    -fx-border-color: #2c2c2e;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.18), 6, 0.10, 0, 2);
 }
 
 .dark-theme .metric-card {

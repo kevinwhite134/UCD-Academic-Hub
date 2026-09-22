@@ -63,11 +63,33 @@ final class AcademicCalculationsTest {
         assertEquals(3.2, gpa.getAsDouble(), 0.001);
     }
 
+    @Test
+    void keepsCompletedTasksOnCalendarDateButOutOfUpcomingDeadlines() {
+        AcademicHubState state = new AcademicHubState();
+        AcademicModule module = module("Compilers", 40.0, 5.0);
+        LocalDate dueDate = LocalDate.now().plusDays(2);
+        state.modules().add(module);
+        state.tasks().add(task(module, "Submit parser", dueDate, true));
+        state.tasks().add(task(module, "Read lexer notes", dueDate, false));
+
+        List<DeadlineItem> dateItems = AcademicCalculations.deadlinesForDate(state, dueDate);
+        List<DeadlineItem> upcomingItems = AcademicCalculations.upcomingDeadlines(state, 10);
+
+        assertEquals(2, dateItems.size());
+        assertTrue(dateItems.stream().anyMatch(item -> item.title().equals("Submit parser") && item.completed()));
+        assertEquals(1, upcomingItems.size());
+        assertEquals("Read lexer notes", upcomingItems.getFirst().title());
+    }
+
     private static AcademicModule module(String name, double passGrade, double credits) {
         return AcademicModule.create(name, name.substring(0, 4).toUpperCase(), "", "#2f80ed", passGrade, credits, "Autumn", "2026/27", 0);
     }
 
     private static AssessmentEntry assessment(AcademicModule module, String name, double weight, Double grade, boolean completed) {
         return AssessmentEntry.create(module.id(), name, weight, grade, completed, LocalDate.of(2026, 9, 18), "", "");
+    }
+
+    private static AcademicTask task(AcademicModule module, String title, LocalDate dueDate, boolean completed) {
+        return AcademicTask.create(module.id(), title, "", "Medium", dueDate, completed, "", "", 0);
     }
 }

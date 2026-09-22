@@ -46,7 +46,7 @@ final class AcademicCalculations {
 
     static List<DeadlineItem> upcomingDeadlines(AcademicHubState state, int limit) {
         LocalDate today = LocalDate.now();
-        return allDeadlines(state).stream()
+        return allDeadlines(state, false).stream()
                 .filter(item -> item.dueDate() != null && !item.dueDate().isBefore(today))
                 .sorted(Comparator.comparing(DeadlineItem::dueDate).thenComparing(DeadlineItem::title))
                 .limit(limit)
@@ -54,7 +54,7 @@ final class AcademicCalculations {
     }
 
     static List<DeadlineItem> deadlinesForDate(AcademicHubState state, LocalDate date) {
-        return allDeadlines(state).stream()
+        return allDeadlines(state, true).stream()
                 .filter(item -> date.equals(item.dueDate()))
                 .sorted(Comparator.comparing(DeadlineItem::type).thenComparing(DeadlineItem::title))
                 .toList();
@@ -83,7 +83,7 @@ final class AcademicCalculations {
                 .sum();
     }
 
-    private static List<DeadlineItem> allDeadlines(AcademicHubState state) {
+    private static List<DeadlineItem> allDeadlines(AcademicHubState state, boolean includeCompletedTasks) {
         List<DeadlineItem> assessmentDeadlines = state.assessments().stream()
                 .filter(assessment -> !assessment.completed())
                 .map(assessment -> new DeadlineItem(
@@ -92,18 +92,20 @@ final class AcademicCalculations {
                         "Assessment",
                         assessment.moduleId(),
                         assessment.url(),
-                        ""
+                        "",
+                        false
                 ))
                 .toList();
         List<DeadlineItem> taskDeadlines = state.tasks().stream()
-                .filter(task -> !task.completed())
+                .filter(task -> includeCompletedTasks || !task.completed())
                 .map(task -> new DeadlineItem(
                         task.dueDate(),
                         task.title(),
                         "Task",
                         task.moduleId(),
                         task.url(),
-                        task.priority()
+                        task.priority(),
+                        task.completed()
                 ))
                 .toList();
         return java.util.stream.Stream.concat(assessmentDeadlines.stream(), taskDeadlines.stream()).toList();

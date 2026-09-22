@@ -8,6 +8,7 @@ record DeadlineItem(
         String type,
         String moduleId,
         String url,
-        String priority
+        String priority,
+        boolean completed
 ) {
 }

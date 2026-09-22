@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.OptionalDouble;
 
 import javafx.animation.ScaleTransition;
+import javafx.animation.AnimationTimer;
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -49,6 +51,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
@@ -69,6 +72,7 @@ import javafx.util.Duration;
 import javafx.util.StringConverter;
 
 public final class UcdGpaCalculatorApp extends Application {
+    private static final String ACTIVE_SCROLL_KEY = "ucd-active-scroll";
     static final DecimalFormat GPA_FORMAT = new DecimalFormat("0.00");
     private static final DecimalFormat POINT_FORMAT = new DecimalFormat("0.0");
     private static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("0.#");
@@ -1567,8 +1571,12 @@ public final class UcdGpaCalculatorApp extends Application {
             cell.getChildren().add(dot);
         } else {
             double weight = items.stream().mapToDouble(this::deadlineWeight).sum();
-            Label pill = new Label(percent(weight));
+            boolean completedTasksOnly = items.stream().allMatch(DeadlineItem::completed);
+            Label pill = new Label(completedTasksOnly ? "Done" : percent(weight));
             pill.getStyleClass().add("deadline-pill");
+            if (completedTasksOnly) {
+                pill.getStyleClass().add("deadline-pill-completed");
+            }
             cell.getChildren().add(pill);
             addHoverMotion(pill, 1.08);
         }
@@ -1686,13 +1694,23 @@ public final class UcdGpaCalculatorApp extends Application {
         title.getStyleClass().add("calendar-detail-assessment");
         Label type = new Label(item.type());
         type.getStyleClass().add("calendar-detail-type");
+        if (item.completed()) {
+            type.getStyleClass().add("calendar-detail-type-completed");
+        }
         Label weight = new Label(percent(deadlineWeight(item)));
         weight.getStyleClass().add("calendar-detail-weight");
+        if (item.completed()) {
+            weight.setText("Done");
+            weight.getStyleClass().add("calendar-detail-weight-completed");
+        }
         Label date = new Label(formatDate(item.dueDate()));
         date.getStyleClass().add("calendar-detail-date");
         HBox row = new HBox(18, new VBox(3, module, date), new VBox(4, title, type), spacer(), weight);
         row.setAlignment(Pos.CENTER_LEFT);
         row.getStyleClass().add("calendar-detail-row");
+        if (item.completed()) {
+            row.getStyleClass().add("calendar-detail-row-completed");
+        }
         addHoverMotion(row, 1.01);
         return row;
     }
@@ -1724,17 +1742,18 @@ public final class UcdGpaCalculatorApp extends Application {
                         "Assessment",
                         assessment.moduleId(),
                         assessment.url(),
-                        ""
+                        "",
+                        false
                 )));
         state.tasks().stream()
-                .filter(task -> !task.completed())
                 .forEach(task -> deadlines.add(new DeadlineItem(
                         task.dueDate(),
                         task.title(),
                         "Task",
                         task.moduleId(),
                         task.url(),
-                        task.priority()
+                        task.priority(),
+                        task.completed()
                 )));
         return deadlines;
     }
@@ -2105,7 +2124,88 @@ public final class UcdGpaCalculatorApp extends Application {
         scrollPane.setFitToWidth(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.getStyleClass().add("page-scroll");
+        configureSmoothScrolling(scrollPane);
         return scrollPane;
+    }
+
+    private void configureSmoothScrolling(ScrollPane scrollPane) {
+        double[] targetValue = {scrollPane.getVvalue()};
+        boolean[] animating = {false};
+
+        PauseTransition scrollingFinished = new PauseTransition(Duration.millis(150));
+        scrollingFinished.setOnFinished(event -> {
+            scrollPane.getProperties().put(ACTIVE_SCROLL_KEY, false);
+            scrollPane.getStyleClass().remove("scrolling");
+        });
+
+        AnimationTimer timer = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                double current = scrollPane.getVvalue();
+                double difference = targetValue[0] - current;
+                if (Math.abs(difference) < 0.00035) {
+                    scrollPane.setVvalue(targetValue[0]);
+                    animating[0] = false;
+                    stop();
+                    return;
+                }
+                scrollPane.setVvalue(current + difference * 0.26);
+            }
+        };
+
+        scrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
+            if (!animating[0]) {
+                targetValue[0] = newValue.doubleValue();
+            }
+        });
+
+        scrollPane.addEventFilter(ScrollEvent.SCROLL, event -> {
+            if (shouldKeepNativeScroll(event, scrollPane) || Math.abs(event.getDeltaY()) < 0.01) {
+                return;
+            }
+
+            double scrollableHeight = scrollPane.getContent().getLayoutBounds().getHeight()
+                    - scrollPane.getViewportBounds().getHeight();
+            if (scrollableHeight <= 0.0) {
+                return;
+            }
+
+            double normalizedDelta = event.getDeltaY() * 1.65 / scrollableHeight;
+            targetValue[0] = clamp(targetValue[0] - normalizedDelta, scrollPane.getVmin(), scrollPane.getVmax());
+
+            scrollPane.getProperties().put(ACTIVE_SCROLL_KEY, true);
+            if (!scrollPane.getStyleClass().contains("scrolling")) {
+                scrollPane.getStyleClass().add("scrolling");
+            }
+            scrollingFinished.playFromStart();
+
+            if (!animating[0]) {
+                animating[0] = true;
+                timer.start();
+            }
+            event.consume();
+        });
+    }
+
+    private boolean shouldKeepNativeScroll(ScrollEvent event, ScrollPane owner) {
+        if (!(event.getTarget() instanceof Node target)) {
+            return false;
+        }
+        for (Node current = target; current != null && current != owner; current = current.getParent()) {
+            if (current instanceof TextArea) {
+                return true;
+            }
+            if (current instanceof ScrollPane nested
+                    && nested != owner
+                    && (event.isShiftDown() || Math.abs(event.getDeltaX()) > Math.abs(event.getDeltaY()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private double clamp(double value, double minimum, double maximum) {
+        return Math.max(minimum, Math.min(maximum, value));
     }
 
     private VBox emptyState(String titleText, String bodyText, Button action) {
@@ -2514,8 +2614,22 @@ public final class UcdGpaCalculatorApp extends Application {
     }
 
     private void addHoverMotion(Node node, double hoverScale) {
-        node.setOnMouseEntered(event -> animateScale(node, hoverScale));
+        node.setOnMouseEntered(event -> {
+            if (!isInsideActiveScroll(node)) {
+                animateScale(node, hoverScale);
+            }
+        });
         node.setOnMouseExited(event -> animateScale(node, 1.0));
+    }
+
+    private boolean isInsideActiveScroll(Node node) {
+        for (Node current = node; current != null; current = current.getParent()) {
+            if (current instanceof ScrollPane scrollPane
+                    && Boolean.TRUE.equals(scrollPane.getProperties().get(ACTIVE_SCROLL_KEY))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void animateScale(Node node, double scale) {
