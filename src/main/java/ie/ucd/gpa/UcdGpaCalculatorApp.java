@@ -17,8 +17,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.OptionalDouble;
 
+import javafx.animation.AnimationTimer;
 import javafx.animation.ScaleTransition;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -32,6 +34,7 @@ import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
@@ -69,10 +72,12 @@ import javafx.util.Duration;
 import javafx.util.StringConverter;
 
 public final class UcdGpaCalculatorApp extends Application {
+    private static final double SCROLL_DISTANCE_MULTIPLIER = 2.6;
     static final DecimalFormat GPA_FORMAT = new DecimalFormat("0.00");
     private static final DecimalFormat POINT_FORMAT = new DecimalFormat("0.0");
     private static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("0.#");
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM yyyy");
+    private static final DateTimeFormatter CALENDAR_DATE_FORMAT = DateTimeFormatter.ofPattern("EEEE, d MMM yyyy");
     private static final List<String> PRIORITIES = List.of("Critical", "High", "Normal", "Low");
     private static final List<ModuleColour> MODULE_COLOURS = List.of(
             new ModuleColour("Blue", "#2f80ed"),
@@ -86,6 +91,7 @@ public final class UcdGpaCalculatorApp extends Application {
     private final List<SubjectEntry> subjects = new ArrayList<>();
     private final BooleanProperty percentageMode = new SimpleBooleanProperty(true);
     private final BooleanProperty darkMode = new SimpleBooleanProperty(true);
+    private final BooleanProperty gpaPointsMode = new SimpleBooleanProperty(false);
     private final DoubleProperty calendarZoom = new SimpleDoubleProperty(0.82);
     private final Label gpaLabel = new Label("GPA: -");
     private final Label classificationLabel = new Label("Classification: -");
@@ -94,7 +100,7 @@ public final class UcdGpaCalculatorApp extends Application {
 
     private AcademicHubState state = new AcademicHubState();
     private BorderPane shell;
-    private HubPage activePage = HubPage.DASHBOARD;
+    private HubPage activePage = HubPage.CALENDAR;
     private AcademicModule editingModule;
     private AssessmentEntry editingAssessment;
     private AcademicTask editingTask;
@@ -116,7 +122,7 @@ public final class UcdGpaCalculatorApp extends Application {
         shell.getStyleClass().add("hub-root");
         applyTheme();
         shell.setLeft(buildSidebar());
-        shell.setCenter(buildDashboardPage());
+        shell.setCenter(buildCalendarPage());
 
         Scene scene = new Scene(shell, 1240, 820);
         scene.getStylesheets().add(getClass().getResource("/ie/ucd/gpa/styles.css").toExternalForm());
@@ -145,6 +151,10 @@ public final class UcdGpaCalculatorApp extends Application {
     }
 
     private void showPage(HubPage page) {
+        showPage(page, null);
+    }
+
+    private void showPage(HubPage page, Double scrollPosition) {
         activePage = page;
         if (page != HubPage.MODULES) {
             editingModule = null;
@@ -155,13 +165,17 @@ public final class UcdGpaCalculatorApp extends Application {
         }
 
         shell.setLeft(buildSidebar());
-        shell.setCenter(switch (page) {
+        Node content = switch (page) {
             case DASHBOARD -> buildDashboardPage();
             case MODULES -> buildModulesPage();
             case TASKS -> buildTasksPage();
             case CALENDAR -> buildCalendarPage();
             case GPA -> buildGpaLandingPage();
-        });
+        };
+        if (scrollPosition != null && content instanceof ScrollPane scrollPane) {
+            scrollPane.setVvalue(scrollPosition);
+        }
+        shell.setCenter(content);
     }
 
     private VBox buildSidebar() {
@@ -184,10 +198,16 @@ public final class UcdGpaCalculatorApp extends Application {
         HBox brand = new HBox(12, logoPlate, brandText);
         brand.setAlignment(Pos.CENTER_LEFT);
 
-        VBox nav = new VBox(8);
-        for (HubPage page : HubPage.values()) {
-            nav.getChildren().add(navButton(page));
-        }
+        VBox nav = new VBox(7,
+                navButton(HubPage.CALENDAR),
+                navButton(HubPage.DASHBOARD),
+                navButton(HubPage.GPA)
+        );
+        Separator editDivider = new Separator();
+        editDivider.getStyleClass().add("sidebar-divider");
+        Label editLabel = new Label("EDIT");
+        editLabel.getStyleClass().add("sidebar-section-label");
+        nav.getChildren().addAll(editDivider, editLabel, navButton(HubPage.MODULES), navButton(HubPage.TASKS));
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
@@ -200,12 +220,27 @@ public final class UcdGpaCalculatorApp extends Application {
         themeToggle.getStyleClass().add("theme-toggle");
         themeToggle.setMaxWidth(Double.MAX_VALUE);
         themeToggle.setOnAction(event -> {
+            Double scrollPosition = currentPageScrollPosition();
             darkMode.set(!darkMode.get());
             applyTheme();
-            showPage(activePage);
+            showPage(activePage, scrollPosition);
         });
 
-        VBox sidebar = new VBox(22, brand, nav, spacer, themeToggle, storage);
+        ToggleButton displayModeToggle = new ToggleButton("GPA x100");
+        displayModeToggle.getStyleClass().addAll("theme-toggle", "display-mode-toggle");
+        displayModeToggle.setSelected(gpaPointsMode.get());
+        displayModeToggle.setMaxWidth(Double.MAX_VALUE);
+        displayModeToggle.setOnAction(event -> {
+            Double scrollPosition = currentPageScrollPosition();
+            gpaPointsMode.set(displayModeToggle.isSelected());
+            showPage(activePage, scrollPosition);
+        });
+
+        HBox viewControls = new HBox(8, themeToggle, displayModeToggle);
+        HBox.setHgrow(themeToggle, Priority.ALWAYS);
+        HBox.setHgrow(displayModeToggle, Priority.ALWAYS);
+
+        VBox sidebar = new VBox(22, brand, nav, spacer, viewControls, storage);
         sidebar.getStyleClass().add("sidebar");
         sidebar.setPrefWidth(214);
         return sidebar;
@@ -273,13 +308,15 @@ public final class UcdGpaCalculatorApp extends Application {
     }
 
     private OptionalDouble overallCourseCompletion() {
-        if (state.modules().isEmpty()) {
+        double credits = totalCredits();
+        if (credits <= 0.0) {
             return OptionalDouble.empty();
         }
         double total = state.modules().stream()
-                .mapToDouble(module -> AcademicCalculations.progressFor(module, state.assessmentsFor(module.id())).completedWeight())
+                .mapToDouble(module -> AcademicCalculations.progressFor(module, state.assessmentsFor(module.id())).completedWeight()
+                        * module.credits())
                 .sum();
-        return OptionalDouble.of(total / state.modules().size());
+        return OptionalDouble.of(total / credits);
     }
 
     private VBox metricCard(String labelText, String valueText, String detailText) {
@@ -306,7 +343,8 @@ public final class UcdGpaCalculatorApp extends Application {
         detail.getStyleClass().add("muted");
         detail.setWrapText(true);
 
-        VBox card = new VBox(7, label, percentageRing(percentage.orElse(0.0), "#00e5ff", "Complete", 62), detail);
+        double value = percentage.orElse(0.0);
+        VBox card = new VBox(7, label, percentageRing(value, "#00e5ff", "Complete", 62, semesterValue(value)), detail);
         card.getStyleClass().add("metric-card");
         card.setMinWidth(190);
         HBox.setHgrow(card, Priority.ALWAYS);
@@ -314,7 +352,7 @@ public final class UcdGpaCalculatorApp extends Application {
         return card;
     }
 
-    private VBox percentageRing(double value, String colour, String labelText, double size) {
+    private VBox percentageRing(double value, String colour, String labelText, double size, String displayText) {
         double clamped = Math.max(0.0, Math.min(100.0, value));
         double strokeWidth = Math.max(3.0, size * 0.065);
         double inset = strokeWidth / 2.0 + 1.5;
@@ -339,7 +377,7 @@ public final class UcdGpaCalculatorApp extends Application {
         context.setTextBaseline(VPos.CENTER);
         context.setFill(Color.web(darkMode.get() ? "#f5f7fa" : "#162b39"));
         context.setFont(Font.font("Segoe UI", FontWeight.BOLD, Math.max(11.0, size * 0.18)));
-        context.fillText(percent(clamped), size / 2.0, size / 2.0);
+        context.fillText(displayText, size / 2.0, size / 2.0);
 
         VBox wrapper;
         if (labelText == null || labelText.isBlank()) {
@@ -396,14 +434,14 @@ public final class UcdGpaCalculatorApp extends Application {
         context.setTextBaseline(VPos.CENTER);
         context.setFill(Color.web(darkMode.get() ? "#f5f7fa" : "#162b39"));
         context.setFont(Font.font("Segoe UI", FontWeight.BOLD, 22.0));
-        context.fillText(percent(secured), center, center - 5.0);
+        context.fillText(moduleValue(secured, module), center, center - 5.0);
         context.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10.0));
         context.setFill(Color.web(darkMode.get() ? "#aebdca" : "#647884"));
         context.fillText("secured", center, center + 16.0);
 
-        Label complete = progressStat("Complete", progress.completedWeight(), "#162b39");
-        Label passMark = progressStat("Pass mark", module.passGrade(), "#9a6a00");
-        Label remaining = progressStat("Remaining", progress.remainingWeight(), "#647884");
+        Label complete = progressStat("Complete", progress.completedWeight(), "#162b39", module);
+        Label passMark = progressStat("Pass mark", module.passGrade(), "#9a6a00", module);
+        Label remaining = progressStat("Remaining", progress.remainingWeight(), "#647884", module);
         HBox stats = new HBox(10, complete, passMark, remaining);
         stats.setAlignment(Pos.CENTER);
 
@@ -447,15 +485,15 @@ public final class UcdGpaCalculatorApp extends Application {
         context.setTextBaseline(VPos.CENTER);
         context.setFill(Color.web(darkMode.get() ? "#f5f7fa" : "#162b39"));
         context.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13.0));
-        context.fillText(percent(secured), center, center);
+        context.fillText(moduleValue(secured, module), center, center);
 
         VBox wheel = new VBox(canvas);
         wheel.setAlignment(Pos.CENTER);
         return wheel;
     }
 
-    private Label progressStat(String labelText, double value, String colour) {
-        Label label = new Label(labelText + "\n" + percent(value));
+    private Label progressStat(String labelText, double value, String colour, AcademicModule module) {
+        Label label = new Label(labelText + "\n" + moduleValue(value, module));
         label.getStyleClass().add("progress-stat");
         String themedColour = darkMode.get()
                 ? ("#9a6a00".equalsIgnoreCase(colour) ? "#f2c94c" : "#cbd5df")
@@ -495,12 +533,25 @@ public final class UcdGpaCalculatorApp extends Application {
         name.getStyleClass().add("assessment-title");
         name.setWrapText(true);
 
-        Label detail = new Label((assessment.finalExam() ? "Final | " : "") + percent(assessment.weight()) + " weight | due " + formatDate(assessment.dueDate()));
-        detail.getStyleClass().add("muted");
-        detail.setWrapText(true);
+        Label finalBadge = new Label("FINAL");
+        finalBadge.getStyleClass().add("assessment-final-badge");
+        finalBadge.setVisible(assessment.finalExam());
+        finalBadge.setManaged(assessment.finalExam());
 
-        Label gradeLabel = new Label("Grade");
-        gradeLabel.getStyleClass().add("small-label");
+        HBox titleRow = new HBox(8, name, finalBadge);
+        titleRow.setAlignment(Pos.CENTER_LEFT);
+
+        HBox metadata = new HBox(
+                18,
+                assessmentMetadata("Weight", moduleValue(assessment.weight(), assessment.moduleId())),
+                assessmentMetadata("Due", formatDate(assessment.dueDate()))
+        );
+        metadata.getStyleClass().add("assessment-metadata");
+
+        VBox summary = new VBox(4, titleRow, metadata);
+
+        Label gradeLabel = new Label("Recorded grade");
+        gradeLabel.getStyleClass().add("assessment-grade-label");
         TextField grade = new TextField(assessment.grade() == null ? "" : PERCENT_FORMAT.format(assessment.grade()));
         grade.setPromptText("0-100");
         grade.getStyleClass().add("dashboard-grade-field");
@@ -520,17 +571,21 @@ public final class UcdGpaCalculatorApp extends Application {
         doneIcon.setManaged(assessment.completed());
 
         Button open = smallButton("Open");
-        open.setDisable(assessment.url() == null || assessment.url().isBlank());
+        boolean hasUrl = assessment.url() != null && !assessment.url().isBlank();
+        open.setVisible(hasUrl);
+        open.setManaged(hasUrl);
         open.setOnAction(event -> openUrl(assessment.url()));
 
-        HBox topRow = new HBox(10, completed, new VBox(1, name, detail), spacer(), doneIcon, open);
+        HBox topRow = new HBox(12, completed, summary, spacer(), doneIcon, open);
         topRow.setAlignment(Pos.CENTER_LEFT);
 
-        VBox row = new VBox(2, topRow, gradeRow);
+        VBox row = new VBox(8, topRow, gradeRow);
         row.getStyleClass().add("dashboard-assessment-row");
         if (assessment.completed()) {
             row.getStyleClass().add("dashboard-assessment-row-completed");
         }
+
+        boolean[] suppressGradeSave = {false};
 
         completed.setOnAction(event -> {
             assessment.setCompleted(completed.isSelected());
@@ -546,24 +601,48 @@ public final class UcdGpaCalculatorApp extends Application {
                 gradeRow.setManaged(true);
                 grade.requestFocus();
             } else {
+                suppressGradeSave[0] = true;
                 persistAndRefresh(HubPage.DASHBOARD);
+                suppressGradeSave[0] = false;
             }
         });
 
-        grade.setOnAction(event -> saveDashboardAssessmentGrade(assessment, grade));
+        grade.setOnAction(event -> {
+            suppressGradeSave[0] = true;
+            saveDashboardAssessmentGrade(assessment, grade);
+            suppressGradeSave[0] = false;
+        });
         grade.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue) {
-                saveDashboardAssessmentGrade(assessment, grade);
+                Platform.runLater(() -> {
+                    if (!suppressGradeSave[0] && grade.getScene() != null) {
+                        saveDashboardAssessmentGrade(assessment, grade);
+                    }
+                });
             }
         });
 
         return row;
     }
 
+    private VBox assessmentMetadata(String labelText, String valueText) {
+        Label label = new Label(labelText.toUpperCase());
+        label.getStyleClass().add("assessment-meta-label");
+        Label value = new Label(valueText);
+        value.getStyleClass().add("assessment-meta-value");
+        return new VBox(1, label, value);
+    }
+
     private void saveDashboardAssessmentGrade(AssessmentEntry assessment, TextField gradeField) {
         Double grade = parseOptionalPercent(gradeField, "Assessment grade");
         if (grade == InvalidNumber.VALUE) {
             gradeField.setText(assessment.grade() == null ? "" : PERCENT_FORMAT.format(assessment.grade()));
+            return;
+        }
+        Double existingGrade = assessment.grade();
+        boolean gradeChanged = existingGrade == null ? grade != null : !existingGrade.equals(grade);
+        boolean completionChanged = grade != null && !assessment.completed();
+        if (!gradeChanged && !completionChanged) {
             return;
         }
         assessment.setGrade(grade);
@@ -633,7 +712,7 @@ public final class UcdGpaCalculatorApp extends Application {
         nextAssessment.getStyleClass().add("next-deadline");
         nextAssessment.setWrapText(true);
 
-        Label weightStatus = new Label("Assessment weights: " + percent(progress.totalWeight()));
+        Label weightStatus = new Label("Assessment weights: " + moduleValue(progress.totalWeight(), module));
         weightStatus.getStyleClass().add(progress.assessmentWeightsComplete() ? "ok-text" : "warning-text");
 
         VBox card = new VBox(5,
@@ -702,7 +781,7 @@ public final class UcdGpaCalculatorApp extends Application {
                 result.getChildren().add(targetMessage("This target is mathematically impossible from the remaining weight."));
             } else {
                 HBox row = new HBox(6,
-                        percentageRing(required, "#007aff", "Need", 42),
+                        percentageRing(required, "#007aff", "Need", 42, percent(required)),
                         targetMessage("average across remaining assessments.")
                 );
                 row.setAlignment(Pos.CENTER_LEFT);
@@ -902,8 +981,15 @@ public final class UcdGpaCalculatorApp extends Application {
         dueWeek.setValue(editingAssessment != null && editingAssessment.termWeek() != null
                 ? editingAssessment.termWeek()
                 : currentTermWeek(termStart()));
+        DayOfWeek savedAssessmentDay = editingAssessment != null
+                && editingAssessment.termWeek() != null
+                && editingAssessment.dueDate() != null
+                ? editingAssessment.dueDate().getDayOfWeek()
+                : DayOfWeek.MONDAY;
+        ComboBox<DayOfWeek> dueDay = termDaySelector(savedAssessmentDay);
         dueDate.disableProperty().bind(dueMode.valueProperty().isEqualTo("Term week"));
         dueWeek.disableProperty().bind(dueMode.valueProperty().isNotEqualTo("Term week"));
+        dueDay.disableProperty().bind(dueMode.valueProperty().isNotEqualTo("Term week"));
         CheckBox completed = new CheckBox("Completed");
         completed.setSelected(editingAssessment != null && editingAssessment.completed());
         CheckBox finalExam = new CheckBox("Final exam");
@@ -919,15 +1005,16 @@ public final class UcdGpaCalculatorApp extends Application {
         addFormRow(form, 3, "Schedule by", dueMode);
         addFormRow(form, 4, "Exact date", dueDate);
         addFormRow(form, 5, "Term week", dueWeek);
-        addFormRow(form, 6, "Status", completed);
-        addFormRow(form, 7, "Calendar", finalExam);
-        addFormRow(form, 8, "Grade", grade);
-        addFormRow(form, 9, "Notes", notes);
-        addFormRow(form, 10, "URL", url);
+        addFormRow(form, 6, "Weekday", dueDay);
+        addFormRow(form, 7, "Status", completed);
+        addFormRow(form, 8, "Calendar", finalExam);
+        addFormRow(form, 9, "Grade", grade);
+        addFormRow(form, 10, "Notes", notes);
+        addFormRow(form, 11, "URL", url);
 
         Button save = new Button(editingAssessment == null ? "Add Assessment" : "Update Assessment");
         save.getStyleClass().add("primary-button");
-        save.setOnAction(event -> saveAssessment(module, name, weight, dueMode, dueDate, dueWeek, completed, finalExam, grade, notes, url));
+        save.setOnAction(event -> saveAssessment(module, name, weight, dueMode, dueDate, dueWeek, dueDay, completed, finalExam, grade, notes, url));
 
         HBox actions = new HBox(8, save);
         if (editingAssessment != null) {
@@ -953,6 +1040,7 @@ public final class UcdGpaCalculatorApp extends Application {
             ComboBox<String> dueModeField,
             DatePicker dueDateField,
             ComboBox<Integer> dueWeekField,
+            ComboBox<DayOfWeek> dueDayField,
             CheckBox completedField,
             CheckBox finalExamField,
             TextField gradeField,
@@ -982,7 +1070,9 @@ public final class UcdGpaCalculatorApp extends Application {
         }
 
         Integer termWeek = "Term week".equals(dueModeField.getValue()) ? dueWeekField.getValue() : null;
-        LocalDate dueDate = termWeek == null ? dueDateField.getValue() : termStart().plusWeeks(termWeek - 1L);
+        LocalDate dueDate = termWeek == null
+                ? dueDateField.getValue()
+                : dateForTermWeek(termWeek, dueDayField.getValue());
 
         if (editingAssessment == null) {
             state.assessments().add(AssessmentEntry.create(
@@ -1108,7 +1198,7 @@ public final class UcdGpaCalculatorApp extends Application {
         title.getStyleClass().add("reference-title");
 
         double totalWeight = AcademicCalculations.assessmentWeightTotal(state, module.id());
-        Label weight = new Label("Total weight: " + percent(totalWeight));
+        Label weight = new Label("Total weight: " + moduleValue(totalWeight, module));
         weight.getStyleClass().add(Math.abs(totalWeight - 100.0) < 0.01 ? "ok-text" : "warning-text");
 
         VBox rows = new VBox(8);
@@ -1130,10 +1220,10 @@ public final class UcdGpaCalculatorApp extends Application {
         Label name = new Label(assessment.name());
         name.getStyleClass().add("row-title");
         Label details = new Label(
-                percent(assessment.weight()) + " weight"
+                moduleValue(assessment.weight(), module) + " weight"
                         + " | " + (assessment.completed() ? "Completed" : "Remaining")
                         + " | Grade: " + (assessment.grade() == null ? "-" : percent(assessment.grade()))
-                        + " | Earned: " + percent(assessment.earnedContribution())
+                        + " | Earned: " + moduleValue(assessment.earnedContribution(), module)
         );
         details.getStyleClass().add("muted");
         Label date = new Label(formatDate(assessment.dueDate()));
@@ -1188,6 +1278,25 @@ public final class UcdGpaCalculatorApp extends Application {
         priority.getItems().addAll(PRIORITIES);
         priority.setValue(editing ? editingTask.priority() : "Normal");
         DatePicker dueDate = new DatePicker(editing ? editingTask.dueDate() : null);
+        ComboBox<String> dueMode = new ComboBox<>();
+        dueMode.getItems().addAll("Exact date", "Term week");
+        dueMode.setValue(editing && editingTask.termWeek() != null ? "Term week" : "Exact date");
+        ComboBox<Integer> dueWeek = new ComboBox<>();
+        for (int week = 1; week <= 12; week++) {
+            dueWeek.getItems().add(week);
+        }
+        dueWeek.setValue(editing && editingTask.termWeek() != null
+                ? editingTask.termWeek()
+                : currentTermWeek(termStart()));
+        DayOfWeek savedTaskDay = editing
+                && editingTask.termWeek() != null
+                && editingTask.dueDate() != null
+                ? editingTask.dueDate().getDayOfWeek()
+                : DayOfWeek.MONDAY;
+        ComboBox<DayOfWeek> dueDay = termDaySelector(savedTaskDay);
+        dueDate.disableProperty().bind(dueMode.valueProperty().isEqualTo("Term week"));
+        dueWeek.disableProperty().bind(dueMode.valueProperty().isNotEqualTo("Term week"));
+        dueDay.disableProperty().bind(dueMode.valueProperty().isNotEqualTo("Term week"));
         CheckBox completed = new CheckBox("Completed");
         completed.setSelected(editing && editingTask.completed());
         TextField url = textField("https://...", editing ? editingTask.url() : "");
@@ -1198,14 +1307,17 @@ public final class UcdGpaCalculatorApp extends Application {
         addFormRow(form, 1, "Title", taskTitle);
         addFormRow(form, 2, "Description", description);
         addFormRow(form, 3, "Priority", priority);
-        addFormRow(form, 4, "Due Date", dueDate);
-        addFormRow(form, 5, "Status", completed);
-        addFormRow(form, 6, "URL", url);
-        addFormRow(form, 7, "Button Label", buttonText);
+        addFormRow(form, 4, "Schedule by", dueMode);
+        addFormRow(form, 5, "Exact date", dueDate);
+        addFormRow(form, 6, "Term week", dueWeek);
+        addFormRow(form, 7, "Weekday", dueDay);
+        addFormRow(form, 8, "Status", completed);
+        addFormRow(form, 9, "URL", url);
+        addFormRow(form, 10, "Button Label", buttonText);
 
         Button save = new Button(editing ? "Update Task" : "Add Task");
         save.getStyleClass().add("primary-button");
-        save.setOnAction(event -> saveTask(module, taskTitle, description, priority, dueDate, completed, url, buttonText));
+        save.setOnAction(event -> saveTask(module, taskTitle, description, priority, dueMode, dueDate, dueWeek, dueDay, completed, url, buttonText));
 
         HBox actions = new HBox(8, save);
         if (editing) {
@@ -1228,7 +1340,10 @@ public final class UcdGpaCalculatorApp extends Application {
             TextField titleField,
             TextArea descriptionField,
             ComboBox<String> priorityField,
+            ComboBox<String> dueModeField,
             DatePicker dueDateField,
+            ComboBox<Integer> dueWeekField,
+            ComboBox<DayOfWeek> dueDayField,
             CheckBox completedField,
             TextField urlField,
             TextField buttonTextField
@@ -1242,6 +1357,10 @@ public final class UcdGpaCalculatorApp extends Application {
         String moduleId = moduleField.getValue() == null ? "" : moduleField.getValue();
         String priority = priorityField.getValue() == null ? "Normal" : priorityField.getValue();
         String buttonText = buttonTextField.getText().trim().isBlank() ? "Open" : buttonTextField.getText().trim();
+        Integer termWeek = "Term week".equals(dueModeField.getValue()) ? dueWeekField.getValue() : null;
+        LocalDate dueDate = termWeek == null
+                ? dueDateField.getValue()
+                : dateForTermWeek(termWeek, dueDayField.getValue());
 
         if (editingTask == null) {
             state.tasks().add(AcademicTask.create(
@@ -1249,18 +1368,20 @@ public final class UcdGpaCalculatorApp extends Application {
                     title,
                     descriptionField.getText().trim(),
                     priority,
-                    dueDateField.getValue(),
+                    dueDate,
                     completedField.isSelected(),
                     urlField.getText().trim(),
                     buttonText,
-                    state.nextTaskOrder()
+                    state.nextTaskOrder(),
+                    termWeek
             ));
         } else {
             editingTask.setModuleId(moduleId);
             editingTask.setTitle(title);
             editingTask.setDescription(descriptionField.getText().trim());
             editingTask.setPriority(priority);
-            editingTask.setDueDate(dueDateField.getValue());
+            editingTask.setDueDate(dueDate);
+            editingTask.setTermWeek(termWeek);
             editingTask.setCompleted(completedField.isSelected());
             editingTask.setUrl(urlField.getText().trim());
             editingTask.setButtonText(buttonText);
@@ -1424,7 +1545,7 @@ public final class UcdGpaCalculatorApp extends Application {
             Region highlight = new Region();
             highlight.getStyleClass().add("calendar-module-highlight");
             highlight.setMouseTransparent(true);
-            timeline.add(highlight, 0, row + 2, 14, 1);
+            timeline.add(highlight, 0, row + 2, 15, 1);
             moduleHighlights.add(highlight);
         }
 
@@ -1451,13 +1572,29 @@ public final class UcdGpaCalculatorApp extends Application {
         examsHeader.getStyleClass().add("term-axis-label");
         timeline.add(examsHeader, 13, 0);
 
+        timeline.add(calendarProgressHeader(), 14, 0);
+
         Label shareHeader = new Label("share of grade");
         shareHeader.getStyleClass().add("calendar-share-label");
         timeline.add(shareHeader, 0, 1);
+
+        List<Double> weeklyShares = new ArrayList<>();
         for (int week = 1; week <= 12; week++) {
-            timeline.add(calendarWeekTotalCell(termStart, week), week, 1);
+            weeklyShares.add(calendarWeekTermShare(termStart, week));
         }
-        timeline.add(calendarExamTotalCell(), 13, 1);
+        double examShare = calendarExamTermShare();
+        double shareScale = Math.max(
+                1.0,
+                Math.max(examShare, weeklyShares.stream().mapToDouble(Double::doubleValue).max().orElse(0.0))
+        );
+        for (int week = 1; week <= 12; week++) {
+            timeline.add(calendarTotalCell(weeklyShares.get(week - 1), false, shareScale), week, 1);
+        }
+        timeline.add(calendarTotalCell(examShare, true, shareScale), 13, 1);
+
+        double overallSecured = averageSecuredGrade();
+        double overallCompleted = overallCourseCompletion().orElse(0.0);
+        timeline.add(calendarProgressBar(overallSecured, overallCompleted), 14, 1);
 
         for (int row = 0; row < modules.size(); row++) {
             AcademicModule module = modules.get(row);
@@ -1465,7 +1602,9 @@ public final class UcdGpaCalculatorApp extends Application {
             moduleName.getStyleClass().add("calendar-module-name");
             Label moduleCode = new Label(module.moduleCode());
             moduleCode.getStyleClass().add("calendar-module-code");
-            VBox moduleLabel = new VBox(2, new HBox(8, moduleColourRule(module.colour()), new VBox(1, moduleName, moduleCode)));
+            Region colourRule = moduleColourRule(module.colour());
+            colourRule.getStyleClass().add("calendar-module-colour-rule");
+            VBox moduleLabel = new VBox(2, new HBox(8, colourRule, new VBox(1, moduleName, moduleCode)));
             moduleLabel.getStyleClass().add("calendar-module-label");
             double moduleWidth = 155.0 * calendarZoom.get();
             moduleLabel.setStyle("-fx-min-width: " + moduleWidth + "; -fx-pref-width: " + moduleWidth + ";");
@@ -1486,6 +1625,9 @@ public final class UcdGpaCalculatorApp extends Application {
             double examWidth = 52.0 * calendarZoom.get();
             examCell.setStyle("-fx-min-width: " + examWidth + "; -fx-pref-width: " + examWidth + ";");
             timeline.add(examCell, 13, row + 2);
+
+            ModuleProgress progress = AcademicCalculations.progressFor(module, state.assessmentsFor(module.id()));
+            timeline.add(calendarProgressBar(progress.securedGrade(), progress.completedWeight(), module), 14, row + 2);
         }
 
         Label termTitle = new Label("Autumn 2026");
@@ -1547,6 +1689,80 @@ public final class UcdGpaCalculatorApp extends Application {
         return state.modules().stream().mapToDouble(AcademicModule::credits).sum();
     }
 
+    private double averageSecuredGrade() {
+        double credits = totalCredits();
+        if (credits <= 0.0) {
+            return 0.0;
+        }
+        return state.modules().stream()
+                .mapToDouble(module -> AcademicCalculations.progressFor(module, state.assessmentsFor(module.id())).securedGrade()
+                        * module.credits())
+                .sum() / credits;
+    }
+
+    private VBox calendarProgressHeader() {
+        Label title = new Label("PROGRESS");
+        title.getStyleClass().add("term-axis-label");
+        Label grade = new Label("GRADE");
+        grade.getStyleClass().add("calendar-progress-secured");
+        Label done = new Label("DONE");
+        done.getStyleClass().add("calendar-progress-completed");
+        HBox legend = new HBox(7, grade, done);
+        legend.setAlignment(Pos.CENTER);
+        VBox header = new VBox(2, title, legend);
+        header.setAlignment(Pos.CENTER);
+        header.getStyleClass().add("calendar-progress-header");
+        return header;
+    }
+
+    private VBox calendarProgressBar(double securedValue, double completedValue) {
+        return calendarProgressBar(securedValue, completedValue, null);
+    }
+
+    private VBox calendarProgressBar(double securedValue, double completedValue, AcademicModule module) {
+        double secured = Math.max(0.0, Math.min(100.0, securedValue));
+        double completed = Math.max(0.0, Math.min(100.0, completedValue));
+        double availableHeight = 36.0;
+        double securedHeight = secured <= 0.0 ? 0.0 : Math.max(1.0, secured / 100.0 * availableHeight);
+        double completedHeight = completed <= 0.0 ? 0.0 : Math.max(1.0, completed / 100.0 * availableHeight);
+
+        Region completedBar = calendarProgressSegment("calendar-progress-bar-completed", completedHeight);
+        Region securedBar = calendarProgressSegment("calendar-progress-bar-secured", securedHeight);
+        StackPane fill = new StackPane(completedBar, securedBar);
+        StackPane.setAlignment(completedBar, Pos.BOTTOM_CENTER);
+        StackPane.setAlignment(securedBar, Pos.BOTTOM_CENTER);
+
+        StackPane track = new StackPane(fill);
+        track.setAlignment(Pos.BOTTOM_CENTER);
+        track.getStyleClass().add("calendar-progress-track");
+
+        Label securedLabel = new Label(module == null
+                ? calendarSemesterValue(secured)
+                : calendarModuleValue(secured, module));
+        securedLabel.getStyleClass().addAll("calendar-progress-secured", "calendar-progress-value");
+        Label completedLabel = new Label(module == null
+                ? calendarSemesterValue(completed)
+                : calendarModuleValue(completed, module));
+        completedLabel.getStyleClass().addAll("calendar-progress-completed", "calendar-progress-value");
+        HBox values = new HBox(6, securedLabel, completedLabel);
+        values.setAlignment(Pos.CENTER);
+
+        VBox bar = new VBox(2, values, track);
+        bar.setAlignment(Pos.BOTTOM_CENTER);
+        bar.getStyleClass().add("calendar-progress-bar");
+        addHoverMotion(bar, 1.05);
+        return bar;
+    }
+
+    private Region calendarProgressSegment(String styleClass, double height) {
+        Region segment = new Region();
+        segment.getStyleClass().add(styleClass);
+        segment.setMinHeight(height);
+        segment.setPrefHeight(height);
+        segment.setMaxHeight(height);
+        return segment;
+    }
+
     private String weekRange(LocalDate termStart, int week) {
         LocalDate start = termStart.plusWeeks(week - 1L);
         LocalDate end = start.plusDays(6);
@@ -1561,7 +1777,7 @@ public final class UcdGpaCalculatorApp extends Application {
             return "Nothing due next week. Use the clear lane to get ahead.";
         }
         long modulesDue = items.stream().map(DeadlineItem::moduleId).distinct().count();
-        return "Next week: " + percent(termShare) + " of your term across " + modulesDue + " module" + (modulesDue == 1 ? "." : "s.");
+        return "Next week: " + calendarSemesterValue(termShare) + " of your term across " + modulesDue + " module" + (modulesDue == 1 ? "." : "s.");
     }
 
     private StackPane calendarWeekCell(
@@ -1583,10 +1799,13 @@ public final class UcdGpaCalculatorApp extends Application {
             cell.getChildren().add(dot);
         } else {
             double weight = items.stream().mapToDouble(this::deadlineWeight).sum();
-            boolean completedTasksOnly = items.stream().allMatch(DeadlineItem::completed);
-            Label pill = new Label(percent(weight));
+            boolean tasksOnly = items.stream().allMatch(item -> "Task".equals(item.type()));
+            boolean allCompleted = items.stream().allMatch(DeadlineItem::completed);
+            Label pill = new Label(tasksOnly ? "Task" : calendarModuleValue(weight, module));
             pill.getStyleClass().add("deadline-pill");
-            if (completedTasksOnly) {
+            if (tasksOnly) {
+                pill.getStyleClass().add("deadline-pill-task");
+            } else if (allCompleted) {
                 pill.getStyleClass().add("deadline-pill-completed");
             }
             cell.getChildren().add(pill);
@@ -1600,28 +1819,26 @@ public final class UcdGpaCalculatorApp extends Application {
         return cell;
     }
 
-    private StackPane calendarWeekTotalCell(LocalDate termStart, int week) {
-        double weight = deadlinesForWeek(termStart, week).stream().mapToDouble(this::deadlineTermShare).sum();
-        return calendarTotalCell(weight, false);
+    private double calendarWeekTermShare(LocalDate termStart, int week) {
+        return deadlinesForWeek(termStart, week).stream().mapToDouble(this::deadlineTermShare).sum();
     }
 
-    private StackPane calendarExamTotalCell() {
+    private double calendarExamTermShare() {
         double credits = totalCredits();
-        double weight = credits <= 0.0 ? 0.0 : state.assessments().stream()
+        return credits <= 0.0 ? 0.0 : state.assessments().stream()
                 .filter(AssessmentEntry::finalExam)
                 .mapToDouble(assessment -> assessment.weight()
                         * state.moduleById(assessment.moduleId()).map(AcademicModule::credits).orElse(0.0)
                         / credits)
                 .sum();
-        return calendarTotalCell(weight, true);
     }
 
-    private StackPane calendarTotalCell(double weight, boolean exam) {
-        Label value = new Label(weight > 0.0 ? percent(weight) : "");
+    private StackPane calendarTotalCell(double weight, boolean exam, double scale) {
+        Label value = new Label(weight > 0.0 ? calendarSemesterValue(weight) : "");
         value.getStyleClass().add("calendar-total-value");
         Region bar = new Region();
         bar.getStyleClass().add(exam ? "calendar-total-bar-exam" : "calendar-total-bar");
-        bar.setPrefHeight(weight > 0.0 ? Math.max(3.0, Math.min(24.0, weight / 100.0 * 24.0)) : 1.0);
+        bar.setPrefHeight(weight > 0.0 ? Math.max(1.0, weight / Math.max(1.0, scale) * 24.0) : 1.0);
         bar.setMaxHeight(Region.USE_PREF_SIZE);
         StackPane cell = new StackPane(bar, value);
         cell.setAlignment(bar, Pos.BOTTOM_CENTER);
@@ -1631,12 +1848,16 @@ public final class UcdGpaCalculatorApp extends Application {
     }
 
     private StackPane calendarExamCell(AcademicModule module, String[] selectedModuleId, Runnable refreshSelection) {
-        double finalWeight = state.assessmentsFor(module.id()).stream()
+        List<AssessmentEntry> finalAssessments = state.assessmentsFor(module.id()).stream()
                 .filter(AssessmentEntry::finalExam)
-                .mapToDouble(AssessmentEntry::weight)
-                .sum();
-        Label pill = new Label(finalWeight > 0.0 ? percent(finalWeight) : "-");
+                .toList();
+        double finalWeight = finalAssessments.stream().mapToDouble(AssessmentEntry::weight).sum();
+        boolean completed = !finalAssessments.isEmpty() && finalAssessments.stream().allMatch(AssessmentEntry::completed);
+        Label pill = new Label(finalWeight > 0.0 ? calendarModuleValue(finalWeight, module) : "-");
         pill.getStyleClass().add(finalWeight > 0.0 ? "exam-pill" : "calendar-dot");
+        if (completed) {
+            pill.getStyleClass().add("deadline-pill-completed");
+        }
         StackPane cell = new StackPane(pill);
         cell.getStyleClass().add("term-cell");
         if (finalWeight > 0.0) {
@@ -1657,7 +1878,9 @@ public final class UcdGpaCalculatorApp extends Application {
             return List.of(empty);
         }
         return assessments.stream()
-                .sorted(Comparator.comparing(assessment -> assessment.dueDate() == null ? LocalDate.MAX : assessment.dueDate()))
+                .sorted(Comparator
+                        .comparing((AssessmentEntry assessment) -> assessment.dueDate() == null ? LocalDate.MAX : assessment.dueDate())
+                        .thenComparing(AssessmentEntry::name))
                 .map(assessment -> (Node) calendarModuleAssessmentRow(termStart, assessment))
                 .toList();
     }
@@ -1682,7 +1905,7 @@ public final class UcdGpaCalculatorApp extends Application {
             type.getStyleClass().add("calendar-detail-type-completed");
         }
         tags.getChildren().add(type);
-        Label weight = new Label(percent(assessment.weight()));
+        Label weight = new Label(calendarModuleValue(assessment.weight(), assessment.moduleId()));
         weight.getStyleClass().add("calendar-detail-weight");
         if (assessment.completed()) {
             weight.getStyleClass().add("calendar-detail-weight-completed");
@@ -1715,15 +1938,19 @@ public final class UcdGpaCalculatorApp extends Application {
         title.getStyleClass().add("calendar-detail-assessment");
         Label type = new Label(item.type());
         type.getStyleClass().add("calendar-detail-type");
-        if (item.completed()) {
+        if ("Task".equals(item.type())) {
+            type.getStyleClass().add("calendar-detail-type-task");
+        } else if (item.completed()) {
             type.getStyleClass().add("calendar-detail-type-completed");
         }
-        Label weight = new Label(percent(deadlineWeight(item)));
+        Label weight = new Label("Task".equals(item.type())
+                ? "Task"
+                : calendarModuleValue(deadlineWeight(item), item.moduleId()));
         weight.getStyleClass().add("calendar-detail-weight");
         if (item.completed()) {
             weight.getStyleClass().add("calendar-detail-weight-completed");
         }
-        Label date = new Label(formatDate(item.dueDate()));
+        Label date = new Label(formatCalendarDate(item.dueDate()));
         date.getStyleClass().add("calendar-detail-date");
         HBox row = new HBox(18, new VBox(3, module, date), new VBox(4, title, type), spacer(), weight);
         row.setAlignment(Pos.CENTER_LEFT);
@@ -1741,7 +1968,11 @@ public final class UcdGpaCalculatorApp extends Application {
         return allOpenDeadlines().stream()
                 .filter(item -> item.dueDate() != null && !item.dueDate().isBefore(start) && !item.dueDate().isAfter(end))
                 .filter(item -> !isFinalAssessment(item))
-                .sorted(Comparator.comparing(DeadlineItem::dueDate).thenComparing(DeadlineItem::title))
+                .sorted(Comparator
+                        .comparingDouble(this::deadlineWeight)
+                        .reversed()
+                        .thenComparing(DeadlineItem::dueDate)
+                        .thenComparing(DeadlineItem::title))
                 .toList();
     }
 
@@ -2143,7 +2374,70 @@ public final class UcdGpaCalculatorApp extends Application {
         scrollPane.setFitToWidth(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.getStyleClass().add("page-scroll");
+        configureSmoothScrolling(scrollPane);
         return scrollPane;
+    }
+
+    private void configureSmoothScrolling(ScrollPane scrollPane) {
+        double[] targetValue = {scrollPane.getVvalue()};
+        boolean[] animating = {false};
+
+        AnimationTimer timer = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                double current = scrollPane.getVvalue();
+                double difference = targetValue[0] - current;
+                if (Math.abs(difference) < 0.0004) {
+                    scrollPane.setVvalue(targetValue[0]);
+                    animating[0] = false;
+                    stop();
+                    return;
+                }
+                scrollPane.setVvalue(current + difference * 0.72);
+            }
+        };
+
+        scrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
+            if (!animating[0]) {
+                targetValue[0] = newValue.doubleValue();
+            }
+        });
+
+        scrollPane.addEventFilter(ScrollEvent.SCROLL, event -> {
+            if (event.isShiftDown() || Math.abs(event.getDeltaY()) < 0.01 || isInsideNestedScroller(event, scrollPane)) {
+                return;
+            }
+
+            double scrollableHeight = scrollPane.getContent().getLayoutBounds().getHeight()
+                    - scrollPane.getViewportBounds().getHeight();
+            if (scrollableHeight <= 0.0) {
+                return;
+            }
+
+            double normalizedDelta = event.getDeltaY() * SCROLL_DISTANCE_MULTIPLIER / scrollableHeight;
+            targetValue[0] = clamp(
+                    targetValue[0] - normalizedDelta,
+                    scrollPane.getVmin(),
+                    scrollPane.getVmax()
+            );
+            if (!animating[0]) {
+                animating[0] = true;
+                timer.start();
+            }
+            event.consume();
+        });
+    }
+
+    private boolean isInsideNestedScroller(ScrollEvent event, ScrollPane owner) {
+        if (!(event.getTarget() instanceof Node target)) {
+            return false;
+        }
+        for (Node current = target; current != null && current != owner; current = current.getParent()) {
+            if (current instanceof TextArea || current instanceof ScrollPane) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private double clamp(double value, double minimum, double maximum) {
@@ -2167,6 +2461,37 @@ public final class UcdGpaCalculatorApp extends Application {
         form.setHgap(10);
         form.setVgap(10);
         return form;
+    }
+
+    private ComboBox<DayOfWeek> termDaySelector(DayOfWeek selectedDay) {
+        ComboBox<DayOfWeek> selector = new ComboBox<>();
+        selector.getItems().addAll(DayOfWeek.values());
+        selector.setValue(selectedDay == null ? DayOfWeek.MONDAY : selectedDay);
+        selector.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(DayOfWeek day) {
+                if (day == null) {
+                    return "";
+                }
+                String name = day.name().toLowerCase();
+                return Character.toUpperCase(name.charAt(0)) + name.substring(1);
+            }
+
+            @Override
+            public DayOfWeek fromString(String value) {
+                return selector.getItems().stream()
+                        .filter(day -> day.name().equalsIgnoreCase(value))
+                        .findFirst()
+                        .orElse(DayOfWeek.MONDAY);
+            }
+        });
+        return selector;
+    }
+
+    private LocalDate dateForTermWeek(Integer week, DayOfWeek day) {
+        int safeWeek = week == null ? currentTermWeek(termStart()) : Math.max(1, Math.min(12, week));
+        DayOfWeek safeDay = day == null ? DayOfWeek.MONDAY : day;
+        return termStart().plusWeeks(safeWeek - 1L).plusDays(safeDay.getValue() - 1L);
     }
 
     private void addFormRow(GridPane form, int row, String labelText, Node field) {
@@ -2287,8 +2612,8 @@ public final class UcdGpaCalculatorApp extends Application {
 
     private String moduleCardStyle(String colour) {
         if (darkMode.get()) {
-            return "-fx-background-color: #1e1e1e;"
-                    + "-fx-border-color: " + mixWithDark(colour, 0.48) + ";";
+            return "-fx-background-color: " + mixWithDark(colour, 0.72) + ";"
+                    + "-fx-border-color: " + mixWithDark(colour, 0.30) + ";";
         }
         return "-fx-background-color: " + mixWithWhite(colour, 0.88) + ";"
                 + "-fx-border-color: " + mixWithWhite(colour, 0.66) + ";";
@@ -2409,11 +2734,17 @@ public final class UcdGpaCalculatorApp extends Application {
     }
 
     private void persistAndRefresh(HubPage page) {
+        double scrollPosition = 0.0;
+        Node currentCenter = shell.getCenter();
+        boolean restoreScroll = page == activePage && currentCenter instanceof ScrollPane;
+        if (restoreScroll) {
+            scrollPosition = ((ScrollPane) currentCenter).getVvalue();
+        }
         state.renumberModules();
         state.renumberTasks();
         try {
             dataStore.save(state);
-            showPage(page);
+            showPage(page, restoreScroll ? scrollPosition : null);
         } catch (IOException ex) {
             showAlert(Alert.AlertType.ERROR, "Could not save data", ex.getMessage());
         }
@@ -2511,6 +2842,10 @@ public final class UcdGpaCalculatorApp extends Application {
         return date == null ? "No date" : DATE_FORMAT.format(date);
     }
 
+    private String formatCalendarDate(LocalDate date) {
+        return date == null ? "No date" : CALENDAR_DATE_FORMAT.format(date);
+    }
+
     private String relativeDate(LocalDate date) {
         if (date == null) {
             return "No date";
@@ -2530,6 +2865,61 @@ public final class UcdGpaCalculatorApp extends Application {
 
     private String percent(double value) {
         return PERCENT_FORMAT.format(value) + "%";
+    }
+
+    private String semesterValue(double percentage) {
+        return gpaPointsMode.get()
+                ? PERCENT_FORMAT.format(percentage * 4.2)
+                : percent(percentage);
+    }
+
+    private String moduleValue(double percentage, AcademicModule module) {
+        return moduleValue(percentage, module == null ? null : module.id());
+    }
+
+    private String moduleValue(double percentage, String moduleId) {
+        if (!gpaPointsMode.get()) {
+            return percent(percentage);
+        }
+        return PERCENT_FORMAT.format(percentage * 4.2 * moduleCreditShare(moduleId));
+    }
+
+    private double moduleCreditShare(String moduleId) {
+        double credits = totalCredits();
+        if (credits <= 0.0 || moduleId == null) {
+            return 0.0;
+        }
+        return state.moduleById(moduleId)
+                .map(module -> module.credits() / credits)
+                .orElse(0.0);
+    }
+
+    private String calendarSemesterValue(double value) {
+        if (gpaPointsMode.get()) {
+            return PERCENT_FORMAT.format(value * 4.2);
+        }
+        if (Math.abs(value) >= 10.0) {
+            return Math.round(value) + "%";
+        }
+        return percent(value);
+    }
+
+    private String calendarModuleValue(double value, AcademicModule module) {
+        return calendarModuleValue(value, module == null ? null : module.id());
+    }
+
+    private String calendarModuleValue(double value, String moduleId) {
+        if (gpaPointsMode.get()) {
+            return PERCENT_FORMAT.format(value * 4.2 * moduleCreditShare(moduleId));
+        }
+        if (Math.abs(value) >= 10.0) {
+            return Math.round(value) + "%";
+        }
+        return percent(value);
+    }
+
+    private Double currentPageScrollPosition() {
+        return shell.getCenter() instanceof ScrollPane scrollPane ? scrollPane.getVvalue() : null;
     }
 
     private void addStyle(Node node, String styleClass) {

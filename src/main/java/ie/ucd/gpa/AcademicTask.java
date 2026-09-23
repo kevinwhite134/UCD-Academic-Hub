@@ -14,6 +14,7 @@ final class AcademicTask {
     private String url;
     private String buttonText;
     private int displayOrder;
+    private Integer termWeek;
 
     AcademicTask(
             String id,
@@ -25,7 +26,8 @@ final class AcademicTask {
             boolean completed,
             String url,
             String buttonText,
-            int displayOrder
+            int displayOrder,
+            Integer termWeek
     ) {
         this.id = id;
         this.moduleId = moduleId;
@@ -37,6 +39,7 @@ final class AcademicTask {
         this.url = url;
         this.buttonText = buttonText;
         this.displayOrder = displayOrder;
+        this.termWeek = termWeek;
     }
 
     static AcademicTask create(
@@ -50,6 +53,21 @@ final class AcademicTask {
             String buttonText,
             int displayOrder
     ) {
+        return create(moduleId, title, description, priority, dueDate, completed, url, buttonText, displayOrder, null);
+    }
+
+    static AcademicTask create(
+            String moduleId,
+            String title,
+            String description,
+            String priority,
+            LocalDate dueDate,
+            boolean completed,
+            String url,
+            String buttonText,
+            int displayOrder,
+            Integer termWeek
+    ) {
         return new AcademicTask(
                 UUID.randomUUID().toString(),
                 moduleId,
@@ -60,7 +78,8 @@ final class AcademicTask {
                 completed,
                 url,
                 buttonText,
-                displayOrder
+                displayOrder,
+                termWeek
         );
     }
 
@@ -138,5 +157,13 @@ final class AcademicTask {
 
     void setDisplayOrder(int displayOrder) {
         this.displayOrder = displayOrder;
+    }
+
+    Integer termWeek() {
+        return termWeek;
+    }
+
+    void setTermWeek(Integer termWeek) {
+        this.termWeek = termWeek;
     }
 }

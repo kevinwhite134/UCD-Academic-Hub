@@ -83,7 +83,8 @@ final class AcademicDataStore {
                     booleanProperty(properties, prefix + "completed", false),
                     property(properties, prefix + "url", ""),
                     property(properties, prefix + "button_text", "Open"),
-                    intProperty(properties, prefix + "display_order", i)
+                    intProperty(properties, prefix + "display_order", i),
+                    optionalIntProperty(properties, prefix + "term_week")
             ));
         }
 
@@ -143,6 +144,7 @@ final class AcademicDataStore {
             put(properties, prefix + "url", task.url());
             put(properties, prefix + "button_text", task.buttonText());
             put(properties, prefix + "display_order", task.displayOrder());
+            put(properties, prefix + "term_week", task.termWeek());
         }
 
         try (OutputStream output = Files.newOutputStream(dataFile)) {
