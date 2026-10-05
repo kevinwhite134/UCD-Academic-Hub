@@ -38,7 +38,7 @@ final class AcademicDataStore {
         int moduleCount = intProperty(properties, "module.count", 0);
         for (int i = 0; i < moduleCount; i++) {
             String prefix = "module." + i + ".";
-            state.modules().add(new AcademicModule(
+            AcademicModule module = new AcademicModule(
                     property(properties, prefix + "id", ""),
                     property(properties, prefix + "name", ""),
                     property(properties, prefix + "module_code", ""),
@@ -49,7 +49,9 @@ final class AcademicDataStore {
                     property(properties, prefix + "semester", ""),
                     property(properties, prefix + "academic_year", ""),
                     intProperty(properties, prefix + "display_order", i)
-            ));
+            );
+            module.setGradeScaleId(property(properties, prefix + "grade_scale", UcdGradeData.DEFAULT_SCALE_ID));
+            state.modules().add(module);
         }
 
         int assessmentCount = intProperty(properties, "assessment.count", 0);
@@ -107,6 +109,7 @@ final class AcademicDataStore {
             put(properties, prefix + "description", module.description());
             put(properties, prefix + "colour", module.colour());
             put(properties, prefix + "pass_grade", module.passGrade());
+            put(properties, prefix + "grade_scale", module.gradeScaleId());
             put(properties, prefix + "credits", module.credits());
             put(properties, prefix + "semester", module.semester());
             put(properties, prefix + "academic_year", module.academicYear());

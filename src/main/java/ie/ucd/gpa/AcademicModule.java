@@ -9,6 +9,7 @@ final class AcademicModule {
     private String description;
     private String colour;
     private double passGrade;
+    private String gradeScaleId = UcdGradeData.DEFAULT_SCALE_ID;
     private double credits;
     private String semester;
     private String academicYear;
@@ -105,6 +106,14 @@ final class AcademicModule {
 
     void setPassGrade(double passGrade) {
         this.passGrade = passGrade;
+    }
+
+    String gradeScaleId() {
+        return gradeScaleId;
+    }
+
+    void setGradeScaleId(String gradeScaleId) {
+        this.gradeScaleId = UcdGradeData.scaleById(gradeScaleId).id();
     }
 
     double credits() {

@@ -11,6 +11,36 @@ import org.junit.jupiter.api.Test;
 
 final class AcademicCalculationsTest {
     @Test
+    void excludesAwaitingGradesButCountsRecordedZero() {
+        AcademicModule module = module("Algorithms", 40.0, 5.0);
+        List<AssessmentEntry> assessments = List.of(
+                assessment(module, "Test", 20.0, 68.0, true),
+                assessment(module, "Submitted", 10.0, null, true),
+                assessment(module, "Zero", 10.0, 0.0, true),
+                assessment(module, "Draft", 10.0, 90.0, false)
+        );
+        ModuleProgress progress = AcademicCalculations.progressFor(module, assessments);
+        assertEquals(40.0, progress.completedWeight(), 0.001);
+        assertEquals(30.0, AcademicCalculations.gradedWeight(assessments), 0.001);
+        assertEquals(13.6, progress.securedGrade(), 0.001);
+        assertEquals(70.0, progress.remainingWeight(), 0.001);
+        assertEquals(83.6, AcademicCalculations.maximumPossibleGrade(progress), 0.001);
+    }
+
+    @Test
+    void doesNotFinalizeGpaUntilAllGradesAreRecorded() {
+        AcademicHubState state = new AcademicHubState();
+        AcademicModule module = module("Algorithms", 40.0, 5.0);
+        state.modules().add(module);
+        state.assessments().add(assessment(module, "Test", 20.0, 68.0, true));
+        AssessmentEntry pending = assessment(module, "Exam", 80.0, null, true);
+        state.assessments().add(pending);
+        assertTrue(AcademicCalculations.currentGpa(state).isEmpty());
+        pending.setGrade(0.0);
+        assertTrue(AcademicCalculations.currentGpa(state).isPresent());
+    }
+
+    @Test
     void calculatesSecuredGradeAndCompletionSeparately() {
         AcademicModule module = module("Software Engineering", 40.0, 5.0);
         List<AssessmentEntry> assessments = List.of(
@@ -30,6 +60,19 @@ final class AcademicCalculationsTest {
         double required = AcademicCalculations.requiredAverage(30.0, 50.0, 60.0);
 
         assertEquals(60.0, required, 0.001);
+    }
+
+    @Test
+    void calculatesMaximumPossibleGradeFromCurrentScores() {
+        AcademicModule module = module("Software Engineering", 40.0, 5.0);
+        List<AssessmentEntry> assessments = List.of(
+                assessment(module, "Assignment", 20.0, 60.0, true),
+                assessment(module, "Exam", 80.0, null, false)
+        );
+
+        ModuleProgress progress = AcademicCalculations.progressFor(module, assessments);
+
+        assertEquals(92.0, AcademicCalculations.maximumPossibleGrade(progress), 0.001);
     }
 
     @Test
@@ -61,6 +104,21 @@ final class AcademicCalculationsTest {
 
         assertTrue(gpa.isPresent());
         assertEquals(3.2, gpa.getAsDouble(), 0.001);
+    }
+
+    @Test
+    void usesEachModulesSelectedScaleForGpa() {
+        AcademicHubState state = new AcademicHubState();
+        AcademicModule first = module("Algorithms", 40.0, 5.0);
+        AcademicModule second = module("Databases", 50.0, 10.0);
+        first.setGradeScaleId("standard40");
+        second.setGradeScaleId("nonLinear50");
+        state.modules().addAll(List.of(first, second));
+        state.assessments().add(assessment(first, "Final", 100.0, 80.0, true));
+        state.assessments().add(assessment(second, "Final", 100.0, 55.0, true));
+
+        assertEquals((4.0 * 5.0 + 2.4 * 10.0) / 15.0,
+                AcademicCalculations.currentGpa(state).orElseThrow(), 0.001);
     }
 
     @Test

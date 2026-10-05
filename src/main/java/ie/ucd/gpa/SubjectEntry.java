@@ -5,7 +5,7 @@ import javafx.beans.property.StringProperty;
 
 final class SubjectEntry {
     private final int number;
-    private final StringProperty scaleId = new SimpleStringProperty("linear40");
+    private final StringProperty scaleId = new SimpleStringProperty(UcdGradeData.DEFAULT_SCALE_ID);
     private final StringProperty percentage = new SimpleStringProperty("");
     private final StringProperty letterBase = new SimpleStringProperty("A");
     private final StringProperty letterSuffix = new SimpleStringProperty("");

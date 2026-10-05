@@ -20,7 +20,7 @@ final class AcademicCalculations {
         double totalWeight = assessments.stream()
                 .mapToDouble(AssessmentEntry::weight)
                 .sum();
-        double remainingWeight = Math.max(0.0, 100.0 - completedWeight);
+        double remainingWeight = Math.max(0.0, 100.0 - gradedWeight(assessments));
         double requiredToPass = requiredAverage(securedGrade, remainingWeight, module.passGrade());
         String passStatus = passStatus(securedGrade, requiredToPass, module.passGrade());
 
@@ -34,6 +34,13 @@ final class AcademicCalculations {
         );
     }
 
+    static double gradedWeight(List<AssessmentEntry> assessments) {
+        return assessments.stream()
+                .filter(assessment -> assessment.completed() && assessment.grade() != null)
+                .mapToDouble(AssessmentEntry::weight)
+                .sum();
+    }
+
     static double requiredAverage(double securedGrade, double remainingWeight, double targetGrade) {
         if (targetGrade <= securedGrade) {
             return 0.0;
@@ -42,6 +49,10 @@ final class AcademicCalculations {
             return Double.POSITIVE_INFINITY;
         }
         return (targetGrade - securedGrade) / remainingWeight * 100.0;
+    }
+
+    static double maximumPossibleGrade(ModuleProgress progress) {
+        return clamp(progress.securedGrade() + progress.remainingWeight(), 0.0, 100.0);
     }
 
     static List<DeadlineItem> upcomingDeadlines(AcademicHubState state, int limit) {
@@ -65,8 +76,8 @@ final class AcademicCalculations {
         double credits = 0.0;
         for (AcademicModule module : state.modules()) {
             ModuleProgress progress = progressFor(module, state.assessmentsFor(module.id()));
-            if (progress.completedWeight() >= 99.99 && module.credits() > 0.0) {
-                String grade = UcdGradeData.scaleById("linear40").gradeFor(progress.securedGrade());
+            if (gradedWeight(state.assessmentsFor(module.id())) >= 99.99 && module.credits() > 0.0) {
+                String grade = UcdGradeData.scaleById(module.gradeScaleId()).gradeFor(progress.securedGrade());
                 weightedPoints += UcdGradeData.gradePoint(grade) * module.credits();
                 credits += module.credits();
             }

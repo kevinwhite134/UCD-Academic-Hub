@@ -6,6 +6,49 @@
     -fx-text-fill: #153242;
 }
 
+.window-frame {
+    -fx-background-color: #000000;
+}
+
+.window-title-bar {
+    -fx-background-color: #000000;
+    -fx-border-color: transparent transparent #222222 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-min-height: 39px;
+    -fx-pref-height: 39px;
+    -fx-padding: 0 8 0 12;
+}
+
+.window-title {
+    -fx-text-fill: #f5f7fa;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+
+.window-button {
+    -fx-min-width: 46px;
+    -fx-pref-width: 46px;
+    -fx-min-height: 32px;
+    -fx-pref-height: 32px;
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-text-fill: #f5f7fa;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.window-button:hover {
+    -fx-background-color: #242424;
+}
+
+.window-close-button:hover {
+    -fx-background-color: #c42b1c;
+    -fx-text-fill: white;
+}
+
 .label,
 .button,
 .text-input,
@@ -347,6 +390,12 @@
     -fx-font-size: 12px;
 }
 
+.target-grade-result {
+    -fx-text-fill: #183140;
+    -fx-font-weight: 900;
+    -fx-font-size: 16px;
+}
+
 .dashboard-assessments {
     -fx-background-color: rgba(255, 255, 255, 0.44);
     -fx-background-radius: 12;
@@ -465,6 +514,10 @@
     -fx-background-color: rgba(248, 250, 251, 0.92);
     -fx-background-radius: 12;
     -fx-padding: 10;
+}
+
+.deadline-row-clickable {
+    -fx-cursor: hand;
 }
 
 .calendar-board {
@@ -708,6 +761,14 @@
     -fx-padding: 12 0;
 }
 
+.calendar-detail-row-focus {
+    -fx-background-color: rgba(0, 229, 255, 0.10);
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(0, 229, 255, 0.55);
+    -fx-border-radius: 8;
+    -fx-padding: 12;
+}
+
 .calendar-detail-module,
 .calendar-detail-assessment {
     -fx-font-size: 15px;
@@ -756,6 +817,19 @@
 .calendar-detail-notes {
     -fx-text-fill: #b7c7d6;
     -fx-font-size: 12px;
+}
+
+.assessment-no-score-pill {
+    -fx-text-fill: #ffb340;
+    -fx-background-color: rgba(255, 179, 64, 0.18);
+    -fx-border-color: rgba(255, 179, 64, 0.65);
+    -fx-border-width: 1;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-padding: 5 10;
+    -fx-font-size: 12px;
+    -fx-font-weight: 900;
+    -fx-effect: dropshadow(gaussian, rgba(255, 179, 64, 0.45), 8, 0.15, 0, 0);
 }
 
 .calendar-zoom-controls {
@@ -886,6 +960,7 @@
 .dark-theme .overview-module-name,
 .dark-theme .task-description,
 .dark-theme .target-message,
+.dark-theme .target-grade-result,
 .dark-theme .credits-pill {
     -fx-text-fill: #dce5ec;
 }
@@ -1365,6 +1440,14 @@
 .calendar-week-selected {
     -fx-background-color: rgba(0, 229, 255, 0.055);
     -fx-border-color: rgba(0, 229, 255, 0.42);
+}
+
+.calendar-deadline-focus {
+    -fx-background-color: rgba(0, 229, 255, 0.13);
+    -fx-background-radius: 8;
+    -fx-border-color: #00e5ff;
+    -fx-border-radius: 8;
+    -fx-border-width: 2;
 }
 
 .calendar-module-highlight {

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 final class UcdGradeData {
+    static final String DEFAULT_SCALE_ID = "linear40";
     static final List<String> LETTER_BASES = List.of("A", "B", "C", "D", "E", "F", "G", "NM", "ABS");
     static final List<String> LETTER_SUFFIXES = List.of("+", "", "-");
 
@@ -42,34 +43,6 @@ final class UcdGradeData {
 
     static final List<GradeScale> SCALES = List.of(
             new GradeScale(
-                    "standard40",
-                    "Standard 40% Pass",
-                    "(Default) 40% Pass Standard Letter/Numeric",
-                    List.of(
-                            band("A+", 90, 100),
-                            band("A", 80, 90),
-                            band("A-", 70, 80),
-                            band("B+", 66.67, 70),
-                            band("B", 63.33, 66.67),
-                            band("B-", 60, 63.33),
-                            band("C+", 56.67, 60),
-                            band("C", 53.33, 56.67),
-                            band("C-", 50, 53.33),
-                            band("D+", 46.67, 50),
-                            band("D", 43.33, 46.67),
-                            band("D-", 40, 43.33),
-                            band("E+", 36.67, 40),
-                            band("E", 33.33, 36.67),
-                            band("E-", 30, 33.33),
-                            band("F+", 26.67, 30),
-                            band("F", 23.33, 26.67),
-                            band("F-", 20, 23.33),
-                            band("G+", 16.67, 20),
-                            band("G", 13.33, 16.67),
-                            band("G-", 0.01, 13.33)
-                    )
-            ),
-            new GradeScale(
                     "linear40",
                     "Alternative Linear 40% Pass",
                     "40% Pass Linear Letter/Numeric",
@@ -95,6 +68,34 @@ final class UcdGradeData {
                             band("G+", 5, 10),
                             band("G", 0.02, 5),
                             band("G-", 0.01, 0.02)
+                    )
+            ),
+            new GradeScale(
+                    "standard40",
+                    "Standard 40% Pass",
+                    "(Default) 40% Pass Standard Letter/Numeric",
+                    List.of(
+                            band("A+", 90, 100),
+                            band("A", 80, 90),
+                            band("A-", 70, 80),
+                            band("B+", 66.67, 70),
+                            band("B", 63.33, 66.67),
+                            band("B-", 60, 63.33),
+                            band("C+", 56.67, 60),
+                            band("C", 53.33, 56.67),
+                            band("C-", 50, 53.33),
+                            band("D+", 46.67, 50),
+                            band("D", 43.33, 46.67),
+                            band("D-", 40, 43.33),
+                            band("E+", 36.67, 40),
+                            band("E", 33.33, 36.67),
+                            band("E-", 30, 33.33),
+                            band("F+", 26.67, 30),
+                            band("F", 23.33, 26.67),
+                            band("F-", 20, 23.33),
+                            band("G+", 16.67, 20),
+                            band("G", 13.33, 16.67),
+                            band("G-", 0.01, 13.33)
                     )
             ),
             new GradeScale(
